@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f7f6fb;
+  --bg-elevated: #ffffff;
+  --bg-muted: #eeeaf6;
+  --bg-sidebar: #f3f1f8;
+  --text: #1e1a2b;
+  --text-muted: #716b82;
+  --line: #e5e0ef;
+  --accent: #6b4ea3;
+  --accent-hover: #5b4190;
+  --accent-soft: #ece7f6;
+  --accent-text: #ffffff;
+  --ring: rgba(107, 78, 163, 0.2);
+  --shadow: 0 10px 40px rgba(30, 26, 43, 0.1);
+}
+
+.dark {
+  --bg: #121018;
+  --bg-elevated: #1b1824;
+  --bg-muted: #241f30;
+  --bg-sidebar: #17141f;
+  --text: #f3f0f8;
+  --text-muted: #a49bb3;
+  --line: #2e283b;
+  --accent: #b59ae6;
+  --accent-hover: #c7b3ee;
+  --accent-soft: #2a2238;
+  --accent-text: #121018;
+  --ring: rgba(181, 154, 230, 0.24);
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+* {
+  border-color: var(--line);
+}
+
+a,
+button,
+label[for],
+select,
+summary,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"] {
+  cursor: pointer;
+}
+
+button:disabled,
+a[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+@keyframes lyra-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lyra-loader {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
+  border-top-color: var(--text-muted);
+  animation: lyra-spin 0.65s linear infinite;
+}
+
+.lyra-loader-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 1.75px;
+}
+
+@keyframes lyra-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.lyra-flip {
+  perspective: 1400px;
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.lyra-flip-inner {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.lyra-flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.lyra-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.lyra-face-back {
+  transform: rotateY(180deg);
+}
+
+.lyra-marquee {
+  animation: lyra-marquee 32s linear infinite;
+}
+
+.lyra-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 75%);
+}

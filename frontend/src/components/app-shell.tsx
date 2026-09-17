@@ -1,0 +1,398 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  ClipboardList,
+  Layers,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  UserRound,
+  Wallet,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Loader } from "@/components/ui/loader";
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { UserAvatar } from "@/components/user-avatar";
+import { api, cacheCredits, peekCredits } from "@/lib/api";
+import { cn } from "@/lib/utils";
+
+const NAV = [
+  { href: "/dashboard", label: "Overview", hint: "Progress and shortcuts", icon: LayoutGrid },
+  { href: "/evaluation", label: "Answer Evaluation", hint: "Score GATE answers", icon: ClipboardList },
+  { href: "/flashcards", label: "Flashcards", hint: "Spaced revision decks", icon: Layers },
+  { href: "/credits", label: "Credits", hint: "Wallet and top-ups", icon: Wallet },
+];
+
+const COLLAPSE_KEY = "lyra.sidebar.collapsed";
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [credits, setCredits] = useState<number | null>(() => peekCredits());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, place: "above" as "above" | "below" });
+  const [tip, setTip] = useState<{ label: string; hint: string; top: number; left: number } | null>(null);
+  const avatarRef = useRef<HTMLButtonElement>(null);
+  const mobileAvatarRef = useRef<HTMLButtonElement>(null);
+  const menuCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!loading && !user) router.replace("/login");
+  }, [loading, user, router]);
+
+  useEffect(() => {
+    if (localStorage.getItem(COLLAPSE_KEY) === "1") setCollapsed(true);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    if (typeof user.credits === "number") {
+      setCredits(user.credits);
+      cacheCredits(user.credits);
+    }
+    let cancelled = false;
+    api<{ balance: number }>("/api/credits/balance")
+      .then((d) => {
+        if (cancelled) return;
+        setCredits(d.balance);
+        cacheCredits(d.balance);
+      })
+      .catch(() => {
+        if (!cancelled && typeof user.credits !== "number") setCredits(peekCredits());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    function onCredits(event: Event) {
+      const detail = (event as CustomEvent<number>).detail;
+      if (typeof detail === "number") setCredits(detail);
+    }
+    window.addEventListener("lyra-credits", onCredits);
+    return () => window.removeEventListener("lyra-credits", onCredits);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setMenuOpen(false);
+    setTip(null);
+  }, [pathname]);
+
+  useEffect(() => {
+    function onClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        menuCardRef.current?.contains(target) ||
+        avatarRef.current?.contains(target) ||
+        mobileAvatarRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  function openMenu(from: HTMLButtonElement | null) {
+    if (!from) return;
+    const rect = from.getBoundingClientRect();
+    const width = 240;
+    const left = Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8);
+    setMenuPos({
+      top: rect.top,
+      left,
+      place: rect.top > window.innerHeight / 2 ? "above" : "below",
+    });
+    setMenuOpen((open) => !open);
+  }
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      const next = !current;
+      localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
+      return next;
+    });
+    setTip(null);
+  }
+
+  if (loading || !user) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[var(--bg)]">
+        <Loader />
+      </div>
+    );
+  }
+
+  const evalsLeft = credits != null ? Math.floor(credits / 10) : null;
+
+  const menu =
+    menuOpen && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={menuCardRef}
+            className="fixed z-[80] w-60 overflow-hidden rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[var(--shadow)]"
+            style={
+              menuPos.place === "above"
+                ? { left: menuPos.left, bottom: `calc(100vh - ${menuPos.top}px + 10px)` }
+                : { left: menuPos.left, top: menuPos.top + 42 }
+            }
+          >
+            <div className="flex items-center gap-3 px-3 py-3">
+              <UserAvatar name={user.full_name} src={user.avatar_url} size={36} />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{user.full_name}</p>
+                <p className="truncate text-xs text-[var(--text-muted)]">{user.email}</p>
+              </div>
+            </div>
+            <div className="border-t border-[var(--line)]">
+              <Link
+                href="/settings"
+                className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-sm transition hover:bg-[var(--bg-muted)]"
+              >
+                <UserRound size={16} />
+                Account
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+              >
+                <LogOut size={16} />
+                Sign out
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  const flyout =
+    tip && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="pointer-events-none fixed z-[70] min-w-[168px] -translate-y-1/2 rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 shadow-[var(--shadow)]"
+            style={{ top: tip.top, left: tip.left }}
+          >
+            <p className="text-[13px] font-medium text-[var(--text)]">{tip.label}</p>
+            <p className="text-[11px] text-[var(--text-muted)]">{tip.hint}</p>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  const collapseButton = (compact: boolean) => (
+    <button
+      type="button"
+      onClick={toggleCollapsed}
+      className={cn(
+        "hidden cursor-pointer items-center gap-2 py-3 text-[13px] text-[var(--text-muted)] transition hover:text-[var(--text)] lg:flex",
+        compact ? "w-full justify-center px-2" : "w-full px-4",
+      )}
+    >
+      <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]">
+        {compact ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+      </span>
+      {!compact && "Collapse"}
+    </button>
+  );
+
+  const nav = (compact: boolean) => (
+    <nav className="min-h-0 flex-1 overflow-y-auto px-2.5">
+      {!compact && (
+        <p className="px-2 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          Modules
+        </p>
+      )}
+      <div className="flex flex-col gap-1">
+        {NAV.map((item) => {
+          const active =
+            pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onMouseEnter={(event) => {
+                if (!compact) return;
+                const rect = event.currentTarget.getBoundingClientRect();
+                setTip({
+                  label: item.label,
+                  hint: item.hint,
+                  top: rect.top + rect.height / 2,
+                  left: rect.right + 10,
+                });
+              }}
+              onMouseLeave={() => setTip(null)}
+              className={cn(
+                "relative flex cursor-pointer items-center gap-3 rounded-md py-2 pr-2 pl-2.5 transition-colors duration-150",
+                compact && "justify-center px-0",
+                active
+                  ? "bg-[var(--accent-soft)] text-[var(--text)]"
+                  : "text-[var(--text-muted)] hover:bg-white hover:text-[var(--text)] dark:hover:bg-white/10",
+              )}
+            >
+              {active && (
+                <span className="absolute top-1/2 left-0 h-6 w-[3px] -translate-y-1/2 rounded-r-sm bg-[var(--accent)]" />
+              )}
+              <span
+                className={cn(
+                  "grid h-8 w-8 shrink-0 place-items-center rounded-md",
+                  active
+                    ? "bg-white text-[var(--accent)] shadow-sm dark:bg-white/10"
+                    : "bg-white/70 text-[var(--accent)] dark:bg-white/10",
+                )}
+              >
+                <Icon size={16} />
+              </span>
+              {!compact && (
+                <span className="min-w-0">
+                  <span className="block truncate text-[13px] font-medium">{item.label}</span>
+                  <span className="block truncate text-[11px] text-[var(--text-muted)]">{item.hint}</span>
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+
+  const footer = (compact: boolean, avatarButtonRef: typeof avatarRef) => (
+    <div className="shrink-0">
+      {!compact && collapseButton(false)}
+      <div className="mx-3 h-px bg-[var(--line)]" />
+      {compact && collapseButton(true)}
+
+      {compact ? (
+        <Link
+          href="/credits"
+          className="mx-2 mt-2 block rounded-md bg-[linear-gradient(180deg,#ffffff,var(--accent-soft))] px-1 py-2.5 text-center dark:bg-[linear-gradient(180deg,var(--bg-elevated),var(--accent-soft))]"
+        >
+          <p className="text-lg font-semibold leading-none tracking-tight">
+            {credits ?? <span className="inline-block h-5 w-10 animate-pulse rounded bg-[var(--line)] align-middle" />}
+          </p>
+          <p className="mt-1 text-[10px] text-[var(--text-muted)]">credits</p>
+        </Link>
+      ) : (
+        <div className="mx-3 mt-3 rounded-md bg-[linear-gradient(180deg,#ffffff,var(--accent-soft))] p-3.5 dark:bg-[linear-gradient(180deg,var(--bg-elevated),var(--accent-soft))]">
+          <div className="flex items-start justify-between">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+              Credits
+            </p>
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-white/80 text-[var(--accent)] dark:bg-white/10">
+              <Wallet size={15} />
+            </span>
+          </div>
+          <p className="mt-1 text-[28px] font-semibold leading-none tracking-tight">
+            {credits ?? <span className="inline-block h-7 w-16 animate-pulse rounded bg-[var(--line)] align-middle" />}
+          </p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            {evalsLeft != null ? `≈ ${evalsLeft} evals left` : "Wallet"}
+          </p>
+          <Link
+            href="/credits"
+            className="mt-3 flex w-full cursor-pointer items-center justify-center rounded-md bg-white py-2 text-[13px] font-medium text-[var(--text)] shadow-sm transition hover:bg-[var(--bg-muted)] dark:bg-[var(--bg-elevated)]"
+          >
+            + Buy credits
+          </Link>
+        </div>
+      )}
+
+      <div className="p-3">
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-1.5 py-1",
+            compact && "flex-col gap-2 px-1 py-2",
+          )}
+        >
+          <ThemeToggle />
+          <button
+            ref={avatarButtonRef}
+            type="button"
+            onClick={(e) => openMenu(e.currentTarget)}
+            className="cursor-pointer rounded-md"
+            aria-label="Account menu"
+          >
+            <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const sidebar = (compact: boolean, forMobile = false) => (
+    <aside
+      className={cn(
+        "flex h-full min-h-0 flex-col bg-[var(--bg-sidebar)]",
+        forMobile ? "h-screen w-[min(86vw,280px)]" : "h-screen",
+      )}
+    >
+      <div className={cn("shrink-0 px-4 py-4", compact && "flex justify-center px-2")}>
+        <Logo compact={compact} />
+      </div>
+      {nav(compact)}
+      {footer(compact, forMobile ? mobileAvatarRef : avatarRef)}
+    </aside>
+  );
+
+  return (
+    <div
+      className={cn(
+        "min-h-screen bg-[var(--bg)] transition-[grid-template-columns] duration-300 ease-out lg:grid",
+        collapsed ? "lg:grid-cols-[72px_1fr]" : "lg:grid-cols-[260px_1fr]",
+      )}
+    >
+      <div className="sticky top-0 z-20 hidden h-screen overflow-hidden border-r border-[var(--line)] lg:block">
+        {sidebar(collapsed)}
+      </div>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-pointer bg-black/35"
+            aria-label="Close menu"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="relative h-full">{sidebar(false, true)}</div>
+        </div>
+      )}
+
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-4 py-3 backdrop-blur lg:hidden">
+          <button type="button" className="cursor-pointer" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
+            <Menu size={20} />
+          </button>
+          <Logo />
+          <div className="flex items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-1 py-1">
+            <ThemeToggle />
+            <button
+              ref={mobileAvatarRef}
+              type="button"
+              onClick={(e) => openMenu(e.currentTarget)}
+              className="cursor-pointer rounded-md"
+              aria-label="Account menu"
+            >
+              <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
+            </button>
+          </div>
+        </header>
+        <main className={cn("flex-1", pathname.startsWith("/flashcards") ? "p-0" : "px-4 py-6 md:px-8 lg:px-10")}>{children}</main>
+      </div>
+      {menu}
+      {flyout}
+    </div>
+  );
+}
