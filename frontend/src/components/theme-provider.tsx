@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from "react";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 
 type Theme = "light" | "dark" | "system";
@@ -31,9 +31,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [resolvedTheme, setResolvedTheme] = useState<Resolved>("light");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stored = (localStorage.getItem(THEME_STORAGE_KEY) as Theme | null) ?? "light";
     const safe: Theme = stored === "dark" || stored === "system" ? stored : "light";
+    document.cookie = `${THEME_STORAGE_KEY}=${safe}; path=/; max-age=31536000; samesite=lax`;
     setThemeState(safe);
     setResolvedTheme(resolve(safe));
     apply(safe);
@@ -52,6 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = useCallback((next: Theme) => {
     localStorage.setItem(THEME_STORAGE_KEY, next);
+    document.cookie = `${THEME_STORAGE_KEY}=${next}; path=/; max-age=31536000; samesite=lax`;
     setThemeState(next);
     setResolvedTheme(resolve(next));
     apply(next);

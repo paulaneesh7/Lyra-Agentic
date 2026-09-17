@@ -4,7 +4,6 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { brand } from "@/lib/brand";
-import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const sans = Inter({
@@ -32,9 +31,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} h-full antialiased`} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
       <body className="min-h-full bg-[var(--bg)] text-[var(--text)]">
         <ThemeProvider>
           <AuthProvider>

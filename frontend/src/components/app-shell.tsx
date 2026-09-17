@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAuth } from "@/components/auth-provider";
 import { Loader } from "@/components/ui/loader";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
