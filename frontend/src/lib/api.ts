@@ -66,11 +66,13 @@ export async function api<T>(path: string, init: RequestInit & { timeoutMs?: num
       signal: rest.signal ?? controller?.signal,
     });
   } catch (err) {
-    const aborted = err instanceof DOMException && err.name === "AbortError";
+    const aborted =
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (err instanceof Error && err.name === "AbortError");
     throw new ApiError(
       aborted
         ? "The API took too long to respond. Please try again."
-        : "Cannot reach the API at localhost:8000. Start the FastAPI backend (and Postgres) first, then try again.",
+        : "Cannot reach the API at localhost:8000. If the backend is running, retry — a long evaluation may have dropped the connection.",
       0,
       aborted ? "api_timeout" : "api_unreachable",
     );
@@ -91,4 +93,64 @@ export async function api<T>(path: string, init: RequestInit & { timeoutMs?: num
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+export async function* streamSse(
+  path: string,
+  body: unknown,
+  timeoutMs = 120_000,
+): AsyncGenerator<Record<string, unknown>> {
+  const headers = new Headers({ "Content-Type": "application/json" });
+  const token = getToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${apiUrl}${path}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    const aborted =
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (err instanceof Error && err.name === "AbortError");
+    throw new ApiError(
+      aborted ? "The follow-up took too long. Please try again." : "Cannot reach the API at localhost:8000.",
+      0,
+      aborted ? "api_timeout" : "api_unreachable",
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) {
+    let message = "Something went wrong. Please try again.";
+    try {
+      const payload = await res.json();
+      message = payload?.error?.message ?? message;
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(message, res.status);
+  }
+  if (!res.body) throw new ApiError("Streaming is not available from the API.", 0, "no_stream");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const parts = buf.split("\n\n");
+    buf = parts.pop() ?? "";
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith("data:")) continue;
+      const raw = line.slice(5).trim();
+      if (!raw) continue;
+      yield JSON.parse(raw) as Record<string, unknown>;
+    }
+  }
 }

@@ -31,7 +31,10 @@ def _evaluate(state: EvaluationState) -> EvaluationState:
     provider = get_ai_provider()
     version, system = get_prompt("evaluation")
     user = (
+        f"Paper: {state.get('paper') or 'GATE CS'}\n"
         f"Question type: {state.get('question_type')}\n"
+        f"Mark weight (formative context only, not official GATE): {state.get('mark_weight') or 'unspecified'}\n"
+        f"Suggested word budget: {state.get('word_target') or 'unspecified'}\n"
         f"Topic: {state.get('topic') or 'unspecified'}\n"
         f"Official answer if trusted (may be empty): {state.get('official_answer') or 'NONE'}\n\n"
         f"QUESTION:\n{state.get('question_text')}\n\n"

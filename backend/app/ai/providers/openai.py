@@ -1,4 +1,5 @@
 import json
+from collections.abc import Iterator
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -73,6 +74,9 @@ class OpenAIProvider(AIProvider):
         )
         return str(result.content)
 
+    def stream_text(self, *, system: str, user: str) -> Iterator[str]:
+        yield from _stream_chat(self.chat, system, user)
+
     def transcribe_images(self, image_bytes: list[bytes], hint: str = "") -> str:
         import base64
 
@@ -133,10 +137,26 @@ class AzureOpenAIProvider(AIProvider):
         )
         return str(result.content)
 
+    def stream_text(self, *, system: str, user: str) -> Iterator[str]:
+        yield from _stream_chat(self.chat, system, user)
+
     def transcribe_images(self, image_bytes: list[bytes], hint: str = "") -> str:
         helper = OpenAIProvider.__new__(OpenAIProvider)
         helper.vision = self.chat
         return OpenAIProvider.transcribe_images(helper, image_bytes, hint)
+
+
+def _stream_chat(chat: Any, system: str, user: str) -> Iterator[str]:
+    for chunk in chat.stream([SystemMessage(content=system), HumanMessage(content=user)]):
+        content = getattr(chunk, "content", None)
+        if isinstance(content, str) and content:
+            yield content
+        elif isinstance(content, list):
+            for part in content:
+                if isinstance(part, str) and part:
+                    yield part
+                elif isinstance(part, dict) and part.get("type") == "text" and part.get("text"):
+                    yield str(part["text"])
 
 
 def _parse_json(text: str) -> dict[str, Any]:

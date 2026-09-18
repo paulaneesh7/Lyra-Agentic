@@ -87,6 +87,12 @@ class EvaluationCreateRequest(BaseModel):
 
 class EvaluationRunRequest(BaseModel):
     extracted_text: str | None = None
+    question_text: str | None = None
+    solution_text: str | None = None
+    paper: str | None = None
+    topic: str | None = None
+    mark_weight: str | None = None
+    word_target: int | None = None
 
 
 class ChatRequest(BaseModel):

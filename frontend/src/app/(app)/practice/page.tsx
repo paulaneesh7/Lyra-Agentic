@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader } from "@/components/ui/loader";
+import { Select } from "@/components/ui/select";
 import { api } from "@/lib/api";
 
 type Subject = { id: string; name: string; topics: { id: string; name: string }[] };
@@ -124,12 +125,18 @@ export default function PracticePage() {
       <h1 className="font-serif text-4xl">Practice</h1>
       <p className="mt-2 text-[var(--muted)]">Choose a subject from the GATE CS syllabus, then start a focused set.</p>
       <Card className="mt-6 max-w-lg space-y-4">
-        <select className="w-full rounded-md border border-[var(--line)] p-2 text-sm" value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
-          <option value="">Any subject</option>
-          {subjects.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        <Select
+          value={subjectId}
+          onChange={setSubjectId}
+          ariaLabel="Subject"
+          variant="field"
+          className="w-full"
+          placeholder="Any subject"
+          options={[
+            { value: "", label: "Any subject" },
+            ...subjects.map((s) => ({ value: s.id, label: s.name })),
+          ]}
+        />
         <label className="block text-sm">
           Number of questions
           <input type="number" className="mt-1 w-full rounded-md border border-[var(--line)] p-2" value={count} onChange={(e) => setCount(Number(e.target.value))} />

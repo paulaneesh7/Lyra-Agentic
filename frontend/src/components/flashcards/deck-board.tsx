@@ -205,7 +205,7 @@ export function DeckBoard({
             <span>·</span>
             <span>{deck.card_count} cards</span>
           </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{deck.title}</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{deck.title}</h1>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
             {deck.unit ? `${deck.unit} · ` : ""}
             {known}/{deck.card_count} known ({pct}%)
