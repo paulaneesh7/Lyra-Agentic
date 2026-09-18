@@ -39,6 +39,7 @@ def create_app() -> FastAPI:
 
         Base.metadata.create_all(bind=engine)
         _ensure_flashcard_columns()
+        _ensure_evaluation_columns()
         try:
             seed_if_needed()
         except Exception:
@@ -68,6 +69,18 @@ def _ensure_flashcard_columns() -> None:
     with engine.begin() as conn:
         for stmt in statements:
             conn.execute(text(stmt))
+
+
+def _ensure_evaluation_columns() -> None:
+    from sqlalchemy import text
+    from app.core.logging import logger
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("SET lock_timeout = '4s'"))
+            conn.execute(text("ALTER TABLE evaluations ALTER COLUMN verdict TYPE TEXT"))
+    except Exception:
+        logger.exception("evaluation_verdict_column_migrate_skipped")
 
 
 app = create_app()

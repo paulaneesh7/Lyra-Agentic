@@ -1,17 +1,22 @@
 from datetime import datetime, timezone
+from collections.abc import Iterator
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.ai.graphs.evaluation import evaluation_graph
+from app.ai.graphs.followup import followup_graph
 from app.ai.ocr.factory import get_ocr_provider
+from app.ai.providers.factory import get_ai_provider
 from app.ai.storage import get_storage
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import AppError, NotFoundError
 from app.models.enums import CreditTransactionType, EvaluationStatus
 from app.models.evaluation import ChatMessage, Evaluation, EvaluationChat, EvaluationImage
 from app.models.user import User
 from app.services.credits import CreditService
+
+FOLLOW_UP_LIMIT = 5
 
 
 class EvaluationService:
@@ -60,10 +65,25 @@ class EvaluationService:
         self.db.flush()
         return evaluation
 
-    def evaluate(self, user: User, evaluation_id: UUID, extracted_text: str | None) -> Evaluation:
+    def evaluate(
+        self,
+        user: User,
+        evaluation_id: UUID,
+        extracted_text: str | None,
+        paper: str | None = None,
+        topic: str | None = None,
+        mark_weight: str | None = None,
+        word_target: int | None = None,
+        question_text: str | None = None,
+        solution_text: str | None = None,
+    ) -> Evaluation:
         evaluation = self.get(user, evaluation_id)
         if extracted_text is not None:
             evaluation.extracted_text = extracted_text
+        if question_text is not None:
+            evaluation.question_text = question_text
+        if solution_text is not None:
+            evaluation.solution_text = solution_text
         tx = self.credits.charge(
             user,
             "evaluation",
@@ -80,17 +100,27 @@ class EvaluationService:
                     "question_text": evaluation.question_text,
                     "solution_text": evaluation.solution_text,
                     "extracted_text": evaluation.extracted_text,
-                    "question_type": evaluation.question_type,
-                    "topic": "",
+                    "question_type": getattr(evaluation.question_type, "value", evaluation.question_type),
+                    "topic": topic or "",
+                    "paper": paper or "GATE CS",
+                    "mark_weight": mark_weight or "",
+                    "word_target": word_target or 0,
                 }
             )
             payload = result["result"]
+            if topic:
+                payload["subject"] = topic
+            if paper:
+                payload["paper"] = paper
+            if mark_weight:
+                payload["mark_weight"] = mark_weight
             evaluation.result = payload
             evaluation.score = payload.get("score")
-            evaluation.verdict = payload.get("verdict")
+            raw_verdict = str(payload.get("verdict") or "")
+            evaluation.verdict = raw_verdict
             evaluation.confidence = payload.get("confidence")
             evaluation.prompt_version = payload.get("prompt_version", "evaluation_v1")
-            evaluation.model_name = payload.get("provider")
+            evaluation.model_name = (payload.get("provider") or "")[:80] or None
             evaluation.status = EvaluationStatus.COMPLETED
         except Exception:
             evaluation.status = EvaluationStatus.FAILED
@@ -101,23 +131,65 @@ class EvaluationService:
                 reference_id=str(evaluation.id),
                 note="evaluation_failed",
             )
-            return evaluation
         finally:
             evaluation.latency_ms = int(
                 (datetime.now(timezone.utc) - started).total_seconds() * 1000
             )
             self.db.flush()
+        if evaluation.status != EvaluationStatus.COMPLETED:
+            return evaluation
         chat = EvaluationChat(evaluation_id=evaluation.id, user_id=user.id)
         self.db.add(chat)
         self.db.flush()
         return evaluation
 
     def follow_up(self, user: User, evaluation_id: UUID, message: str) -> ChatMessage:
+        system, user_prompt, evaluation = self._prepare_follow_up(user, evaluation_id, message)
+        if evaluation.chat is None:
+            raise AppError("Follow-up chat is not available.", 500, "chat_missing")
+        reply = get_ai_provider().complete_text(system=system, user=user_prompt)
+        assistant = ChatMessage(chat_id=evaluation.chat.id, role="assistant", content=reply)
+        self.db.add(assistant)
+        self.db.flush()
+        return assistant
+
+    def iter_follow_up(self, user: User, evaluation_id: UUID, message: str) -> Iterator[dict]:
+        system, user_prompt, evaluation = self._prepare_follow_up(user, evaluation_id, message)
+        if evaluation.chat is None:
+            raise AppError("Follow-up chat is not available.", 500, "chat_missing")
+        chunks: list[str] = []
+        for delta in get_ai_provider().stream_text(system=system, user=user_prompt):
+            if not delta:
+                continue
+            chunks.append(delta)
+            yield {"delta": delta}
+        assistant = ChatMessage(
+            chat_id=evaluation.chat.id,
+            role="assistant",
+            content="".join(chunks).strip() or "I could not generate a follow-up. Please try again.",
+        )
+        self.db.add(assistant)
+        self.db.flush()
+        yield {"done": True}
+
+    def delete(self, user: User, evaluation_id: UUID) -> None:
+        evaluation = self.get(user, evaluation_id)
+        self.db.delete(evaluation)
+        self.db.flush()
+
+    def _prepare_follow_up(self, user: User, evaluation_id: UUID, message: str) -> tuple[str, str, Evaluation]:
         evaluation = self.get(user, evaluation_id)
         if evaluation.chat is None:
             evaluation.chat = EvaluationChat(evaluation_id=evaluation.id, user_id=user.id)
             self.db.add(evaluation.chat)
             self.db.flush()
+        used = sum(1 for m in evaluation.chat.messages if m.role == "user")
+        if used >= FOLLOW_UP_LIMIT:
+            raise AppError(
+                f"This evaluation has used all {FOLLOW_UP_LIMIT} follow-ups.",
+                429,
+                "followup_limit",
+            )
         self.credits.charge(
             user,
             "ai_tutor_message",
@@ -126,31 +198,31 @@ class EvaluationService:
         )
         user_msg = ChatMessage(chat_id=evaluation.chat.id, role="user", content=message)
         self.db.add(user_msg)
-        from app.ai.graphs.tutor import tutor_graph
-
-        history = [
-            {"role": m.role, "content": m.content} for m in evaluation.chat.messages
-        ]
-        reply = tutor_graph.invoke(
-            {
-                "mode": "explain",
-                "paper": "GATE CS",
-                "history": history,
-                "user_message": (
-                    f"Evaluation context score={evaluation.score} verdict={evaluation.verdict}. "
-                    f"Question: {evaluation.question_text[:1500]}\nStudent: {message}"
-                ),
-            }
-        )["reply"]
-        assistant = ChatMessage(chat_id=evaluation.chat.id, role="assistant", content=reply)
-        self.db.add(assistant)
         self.db.flush()
-        return assistant
+        history = [
+            {"role": m.role, "content": m.content} for m in evaluation.chat.messages if m.role in {"user", "assistant"}
+        ]
+        packet = followup_graph.invoke(
+            {
+                "question_text": evaluation.question_text or "",
+                "solution_text": evaluation.solution_text or "",
+                "extracted_text": evaluation.extracted_text or "",
+                "score": evaluation.score,
+                "verdict": evaluation.verdict or "",
+                "result": evaluation.result or {},
+                "history": history[:-1],
+                "user_message": message,
+            }
+        )
+        return packet["system_prompt"], packet["user_prompt"], evaluation
 
     def get(self, user: User, evaluation_id: UUID) -> Evaluation:
         row = self.db.scalar(
             select(Evaluation)
-            .options(selectinload(Evaluation.images), selectinload(Evaluation.chat))
+            .options(
+                selectinload(Evaluation.images),
+                selectinload(Evaluation.chat).selectinload(EvaluationChat.messages),
+            )
             .where(Evaluation.id == evaluation_id, Evaluation.user_id == user.id)
         )
         if not row:

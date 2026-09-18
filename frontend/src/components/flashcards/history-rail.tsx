@@ -19,6 +19,7 @@ export function HistoryRail({
   pins,
   onPin,
   loading = false,
+  variant = "rail",
 }: {
   decks: FlashDeck[];
   activeId: string;
@@ -31,6 +32,7 @@ export function HistoryRail({
   pins: string[];
   onPin: (id: string) => void;
   loading?: boolean;
+  variant?: "rail" | "sheet";
 }) {
   const router = useRouter();
   const dueTotal = decks.reduce((n, d) => n + (d.due_count || 0), 0);
@@ -56,14 +58,17 @@ export function HistoryRail({
     onOpenChange(next);
   }
 
+  const sheet = variant === "sheet";
+
   return (
     <aside
       className={cn(
-        "flex h-full shrink-0 flex-col border-r border-[var(--line)] bg-[var(--bg-sidebar)] transition-[width] duration-200",
-        open ? "w-[260px]" : "w-12",
+        "flex h-full min-h-0 shrink-0 flex-col bg-[var(--bg-sidebar)]",
+        sheet ? "w-full" : "border-r border-[var(--line)] transition-[width] duration-200",
+        !sheet && (open ? "w-[260px]" : "w-12"),
       )}
     >
-      {open ? (
+      {sheet || open ? (
         <>
           <div className="flex items-center justify-between gap-2 px-3 pt-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Deck history</p>
@@ -139,7 +144,7 @@ export function HistoryRail({
                       {d.due_count ? ` · ${d.due_count} due` : ""}
                     </p>
                   </Link>
-                  <div className="flex justify-end px-2 pb-1.5 opacity-0 transition group-hover:opacity-100">
+                  <div className="flex justify-end px-2 pb-1.5 opacity-100 transition lg:opacity-0 lg:group-hover:opacity-100">
                     <button
                       type="button"
                       className="rounded p-1 text-[var(--text-muted)] hover:text-[var(--accent)]"
@@ -153,20 +158,32 @@ export function HistoryRail({
               ))
             )}
           </div>
+          {!sheet && (
           <button
             type="button"
             onClick={toggle}
-            className="flex items-center gap-2 border-t border-[var(--line)] px-3 py-3 text-xs text-[var(--text-muted)] hover:text-[var(--text)]"
+            className="flex shrink-0 items-center gap-2 border-t border-[var(--line)] px-3 py-3 text-xs text-[var(--text-muted)] transition hover:bg-[var(--bg-muted)] hover:text-[var(--text)]"
           >
             <PanelLeftClose size={14} /> Collapse
           </button>
+          )}
         </>
       ) : (
         <div className="flex h-full flex-col items-center gap-3 py-4">
-          <button type="button" onClick={toggle} className="rounded-md p-2 hover:bg-[var(--bg-muted)]" aria-label="Open deck history">
+          <button
+            type="button"
+            onClick={toggle}
+            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--text-muted)] transition hover:border-[var(--accent)] hover:text-[var(--text)]"
+            aria-label="Open deck history"
+          >
             <PanelLeftOpen size={16} />
           </button>
-          <Link href="/flashcards" prefetch className="rounded-md p-2 hover:bg-[var(--bg-muted)]" aria-label="New deck">
+          <Link
+            href="/flashcards"
+            prefetch
+            className="grid h-9 w-9 place-items-center rounded-md text-[var(--text-muted)] transition hover:bg-[var(--bg-muted)] hover:text-[var(--text)]"
+            aria-label="New deck"
+          >
             <Plus size={16} />
           </Link>
           <History size={16} className="mt-1 text-[var(--text-muted)]" />

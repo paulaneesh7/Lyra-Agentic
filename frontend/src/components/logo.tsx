@@ -12,7 +12,14 @@ export function Logo({
   subtitle?: string;
 }) {
   return (
-    <Link href="/" className={cn("flex min-w-0 cursor-pointer items-center gap-2.5", className)}>
+    <Link
+      href="/"
+      className={cn(
+        "flex min-w-0 cursor-pointer items-center gap-2.5 rounded-md outline-none",
+        "focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-sidebar)]",
+        className,
+      )}
+    >
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[var(--accent)]">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path

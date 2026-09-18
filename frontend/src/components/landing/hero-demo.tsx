@@ -39,26 +39,30 @@ export function HeroDemo() {
   const words = a.trim() ? a.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="relative rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow)]">
+    <div className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow)]">
       <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="rounded-md bg-[var(--accent-soft)] px-2 py-1 font-medium text-[var(--accent)]">
+        <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 font-medium text-[var(--accent)]">
           GATE CS · Operating Systems
         </span>
-        <span>
+        <span className="tabular-nums">
           {words}/{ANSWER.trim().split(/\s+/).length}
         </span>
       </div>
-      <p className="mt-3 min-h-12 text-sm font-medium leading-relaxed">{q || " "}</p>
+      <p className="mt-3 min-h-12 text-sm font-medium leading-relaxed">{q || "\u00a0"}</p>
       <p className="mt-3 min-h-24 text-sm leading-relaxed text-[var(--text-muted)]">
         {a}
-        {!done && <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-[var(--accent)] align-middle" />}
+        {!done && (
+          <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-[var(--accent)] align-middle" />
+        )}
       </p>
       <div
-        className={`mt-4 flex items-end justify-between gap-3 border-t border-[var(--line)] pt-3 transition-opacity duration-500 ${done ? "opacity-100" : "opacity-0"}`}
+        className={`mt-4 flex items-end justify-between gap-3 border-t border-[var(--line)] pt-3 transition-all duration-700 ${done ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
       >
         <div>
           <p className="text-xs font-medium text-[var(--accent)]">Evaluation complete</p>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Clear recurrence — mention failed-fork assumption</p>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            Clear recurrence — mention failed-fork assumption
+          </p>
         </div>
         <p className="text-2xl font-semibold tracking-tight">
           8.5<span className="text-sm font-medium text-[var(--text-muted)]">/10</span>

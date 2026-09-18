@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { DeckBoard } from "@/components/flashcards/deck-board";
 import { useFlashStudio } from "@/components/flashcards/use-flash-decks";
 import { ScreenLoader } from "@/components/ui/loader";
+import { api } from "@/lib/api";
 import { removeFlashDeck, upsertFlashDeck } from "@/lib/flash-store";
 import type { FlashDeck } from "@/lib/flashcards";
 

@@ -13,10 +13,11 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/components/auth-provider";
 import { Loader } from "@/components/ui/loader";
+import { MobileDrawer } from "@/components/ui/mobile-drawer";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
@@ -31,6 +32,20 @@ const NAV = [
 ];
 
 const COLLAPSE_KEY = "lyra.sidebar.collapsed";
+
+const TITLES: Record<string, string> = {
+  "/dashboard": "Overview",
+  "/evaluation": "Evaluation",
+  "/flashcards": "Flashcards",
+  "/credits": "Credits",
+  "/settings": "Account",
+  "/tutor": "Tutor",
+  "/practice": "Practice",
+  "/questions": "Questions",
+  "/mock-tests": "Mocks",
+  "/analytics": "Analytics",
+  "/admin": "Admin",
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -90,6 +105,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setTip(null);
   }, [pathname]);
 
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
   useEffect(() => {
     function onClick(event: MouseEvent) {
       const target = event.target as Node;
@@ -137,6 +154,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const evalsLeft = credits != null ? Math.floor(credits / 10) : null;
+
+  const pageTitle =
+    Object.entries(TITLES).find(([href]) => pathname === href || (href !== "/dashboard" && pathname.startsWith(href)))?.[1] ??
+    "Lyra";
 
   const menu =
     menuOpen && typeof document !== "undefined"
@@ -201,8 +222,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         "hidden cursor-pointer items-center gap-2 py-3 text-[13px] text-[var(--text-muted)] transition hover:text-[var(--text)] lg:flex",
         compact ? "w-full justify-center px-2" : "w-full px-4",
       )}
+      aria-label={compact ? "Expand sidebar" : "Collapse sidebar"}
     >
-      <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]">
+      <span className="grid h-7 w-7 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] transition group-hover:border-[var(--accent)]">
         {compact ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
       </span>
       {!compact && "Collapse"}
@@ -210,13 +232,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   const nav = (compact: boolean) => (
-    <nav className="min-h-0 flex-1 overflow-y-auto px-2.5">
+    <nav className="lyra-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-2.5">
       {!compact && (
-        <p className="px-2 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+        <p className="px-2.5 pb-2.5 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
           Modules
         </p>
       )}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         {NAV.map((item) => {
           const active =
             pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -237,19 +259,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               }}
               onMouseLeave={() => setTip(null)}
               className={cn(
-                "relative flex cursor-pointer items-center gap-3 rounded-md py-2 pr-2 pl-2.5 transition-colors duration-150",
+                "relative flex cursor-pointer items-center gap-3 rounded-xl py-2.5 pr-2.5 pl-2.5 transition-all duration-150",
                 compact && "justify-center px-0",
                 active
-                  ? "bg-[var(--accent-soft)] text-[var(--text)]"
-                  : "text-[var(--text-muted)] hover:bg-white hover:text-[var(--text)] dark:hover:bg-white/10",
+                  ? "bg-[var(--accent-soft)] text-[var(--text)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_22%,transparent)]"
+                  : "text-[var(--text-muted)] hover:bg-white/80 hover:text-[var(--text)] dark:hover:bg-white/10",
               )}
             >
               {active && (
-                <span className="absolute top-1/2 left-0 h-6 w-[3px] -translate-y-1/2 rounded-r-sm bg-[var(--accent)]" />
+                <span className="absolute top-1/2 left-0 h-7 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--accent)]" />
               )}
               <span
                 className={cn(
-                  "grid h-8 w-8 shrink-0 place-items-center rounded-md",
+                  "grid h-8 w-8 shrink-0 place-items-center rounded-lg",
                   active
                     ? "bg-white text-[var(--accent)] shadow-sm dark:bg-white/10"
                     : "bg-white/70 text-[var(--accent)] dark:bg-white/10",
@@ -259,8 +281,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
               {!compact && (
                 <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-medium">{item.label}</span>
-                  <span className="block truncate text-[11px] text-[var(--text-muted)]">{item.hint}</span>
+                  <span className="block truncate text-[13px] font-medium leading-snug">{item.label}</span>
+                  <span className="mt-0.5 block truncate text-[11px] leading-snug text-[var(--text-muted)]">
+                    {item.hint}
+                  </span>
                 </span>
               )}
             </Link>
@@ -272,9 +296,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const footer = (compact: boolean, avatarButtonRef: typeof avatarRef) => (
     <div className="shrink-0">
-      {!compact && collapseButton(false)}
-      <div className="mx-3 h-px bg-[var(--line)]" />
-      {compact && collapseButton(true)}
+      {!compact && (
+        <>
+          {collapseButton(false)}
+          <div className="mx-3 h-px bg-[var(--line)]" />
+        </>
+      )}
+      {compact ? <div className="mx-3 h-px bg-[var(--line)]" /> : null}
 
       {compact ? (
         <Link
@@ -314,8 +342,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="p-3">
         <div
           className={cn(
-            "flex items-center justify-between rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-1.5 py-1",
-            compact && "flex-col gap-2 px-1 py-2",
+            "flex h-10 items-center justify-between rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-1",
+            compact && "h-auto flex-col justify-center gap-2 px-1 py-2",
           )}
         >
           <ThemeToggle />
@@ -323,7 +351,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ref={avatarButtonRef}
             type="button"
             onClick={(e) => openMenu(e.currentTarget)}
-            className="cursor-pointer rounded-md"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full p-0 leading-none"
             aria-label="Account menu"
           >
             <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
@@ -336,13 +364,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebar = (compact: boolean, forMobile = false) => (
     <aside
       className={cn(
-        "flex h-full min-h-0 flex-col bg-[var(--bg-sidebar)]",
-        forMobile ? "h-screen w-[min(86vw,280px)]" : "h-screen",
+        "flex h-full min-h-0 flex-col bg-[linear-gradient(180deg,var(--bg-sidebar),color-mix(in_srgb,var(--accent-soft)_55%,var(--bg-sidebar)))]",
+        forMobile ? "h-full w-full" : "h-full",
       )}
     >
-      <div className={cn("shrink-0 px-4 py-4", compact && "flex justify-center px-2")}>
+      <div className={cn("shrink-0 border-b border-[var(--line)]/70 px-4 py-4", compact && "flex justify-center px-2")}>
         <Logo compact={compact} />
       </div>
+      {compact && !forMobile ? collapseButton(true) : null}
       {nav(compact)}
       {footer(compact, forMobile ? mobileAvatarRef : avatarRef)}
     </aside>
@@ -355,42 +384,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         collapsed ? "lg:grid-cols-[72px_1fr]" : "lg:grid-cols-[260px_1fr]",
       )}
     >
-      <div className="sticky top-0 z-20 hidden h-screen overflow-hidden border-r border-[var(--line)] lg:block">
+      <div className="sticky top-0 z-20 hidden h-dvh overflow-clip border-r border-[var(--line)] bg-[var(--bg-sidebar)] lg:block">
         {sidebar(collapsed)}
       </div>
 
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 cursor-pointer bg-black/35"
-            aria-label="Close menu"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="relative h-full">{sidebar(false, true)}</div>
-        </div>
-      )}
+      <MobileDrawer open={mobileOpen} onClose={closeMobile} title="Menu" side="left">
+        {sidebar(false, true)}
+      </MobileDrawer>
 
       <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-4 py-3 backdrop-blur lg:hidden">
-          <button type="button" className="cursor-pointer" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
-            <Menu size={20} />
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-3 py-2.5 backdrop-blur lg:hidden">
+          <button
+            type="button"
+            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation"
+          >
+            <Menu size={18} />
           </button>
-          <Logo />
-          <div className="flex items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-1 py-1">
+          <p className="text-sm font-semibold tracking-tight">{pageTitle}</p>
+          <div className="flex h-9 items-center gap-0.5 rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-0.5">
             <ThemeToggle />
             <button
               ref={mobileAvatarRef}
               type="button"
               onClick={(e) => openMenu(e.currentTarget)}
-              className="cursor-pointer rounded-md"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full p-0 leading-none"
               aria-label="Account menu"
             >
               <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
             </button>
           </div>
         </header>
-        <main className={cn("flex-1", pathname.startsWith("/flashcards") ? "p-0" : "px-4 py-6 md:px-8 lg:px-10")}>{children}</main>
+        <main className={cn("min-w-0 flex-1 overflow-x-hidden", pathname.startsWith("/flashcards") || pathname.startsWith("/evaluation") ? "p-0" : "px-4 py-6 md:px-8 lg:px-10")}>{children}</main>
       </div>
       {menu}
       {flyout}

@@ -1,4 +1,5 @@
 import json
+from collections.abc import Iterator
 from typing import Any
 
 from app.ai.providers.base import AIProvider
@@ -71,10 +72,15 @@ class StubAIProvider(AIProvider):
 
     def complete_text(self, *, system: str, user: str) -> str:
         return (
-            "I am GATEPilot's study companion in demo mode. "
+            "I am Lyra's study companion in demo mode. "
             "Connect an OpenAI or Azure OpenAI key to enable live tutoring. "
             f"You asked: {user[:280]}"
         )
+
+    def stream_text(self, *, system: str, user: str) -> Iterator[str]:
+        text = self.complete_text(system=system, user=user)
+        for word in text.split(" "):
+            yield word + " "
 
     def transcribe_images(self, image_bytes: list[bytes], hint: str = "") -> str:
         return (

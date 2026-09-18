@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from typing import Any
 
 
@@ -19,6 +20,10 @@ class AIProvider(ABC):
     @abstractmethod
     def complete_text(self, *, system: str, user: str) -> str:
         """Return a plain-text completion."""
+
+    @abstractmethod
+    def stream_text(self, *, system: str, user: str) -> Iterator[str]:
+        """Yield incremental tokens for a plain-text completion."""
 
     @abstractmethod
     def transcribe_images(self, image_bytes: list[bytes], hint: str = "") -> str:

@@ -5,6 +5,7 @@ import { ArrowRight, ClipboardList, Layers } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { Loader } from "@/components/ui/loader";
+import { Select } from "@/components/ui/select";
 import { api, cacheCredits, peekCredits } from "@/lib/api";
 
 const SUBJECTS = [
@@ -180,23 +181,22 @@ export default function DashboardPage() {
           Tracks your last 10 answer evaluations on a 10-point scale. Filter by GATE CS subject to see how each paper is going.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <select
-            className="cursor-pointer rounded-md border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-sm"
-            defaultValue="GATE CS"
-            aria-label="Exam"
-          >
-            <option>GATE CS</option>
-          </select>
-          <select
-            className="cursor-pointer rounded-md border border-[var(--line)] bg-[var(--bg)] px-3 py-1.5 text-sm"
+          <Select
+            value="GATE CS"
+            onChange={() => undefined}
+            ariaLabel="Exam"
+            variant="field"
+            options={[{ value: "GATE CS", label: "GATE CS" }]}
+          />
+          <Select
             value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            aria-label="Subject"
-          >
-            {SUBJECTS.map((name) => (
-              <option key={name}>{name}</option>
-            ))}
-          </select>
+            onChange={setSubject}
+            ariaLabel="Subject"
+            menuTitle="Subject"
+            variant="field"
+            className="min-w-[180px]"
+            options={SUBJECTS.map((name) => ({ value: name, label: name }))}
+          />
         </div>
 
         {chartLoading ? (

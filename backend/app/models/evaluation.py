@@ -27,7 +27,7 @@ class Evaluation(Base, TimestampMixin):
     )
     score: Mapped[float | None] = mapped_column(Float)
     max_score: Mapped[float] = mapped_column(Float, default=10)
-    verdict: Mapped[str | None] = mapped_column(String(80))
+    verdict: Mapped[str | None] = mapped_column(Text)
     result: Mapped[dict] = mapped_column(JSONB, default=dict)
     confidence: Mapped[float | None] = mapped_column(Float)
     credit_transaction_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
@@ -39,7 +39,9 @@ class Evaluation(Base, TimestampMixin):
     images: Mapped[list["EvaluationImage"]] = relationship(
         back_populates="evaluation", cascade="all, delete-orphan"
     )
-    chat: Mapped["EvaluationChat | None"] = relationship(back_populates="evaluation", uselist=False)
+    chat: Mapped["EvaluationChat | None"] = relationship(
+        back_populates="evaluation", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class EvaluationImage(Base, TimestampMixin):
