@@ -14,6 +14,11 @@
   --accent-text: #ffffff;
   --ring: rgba(107, 78, 163, 0.2);
   --shadow: 0 10px 40px rgba(30, 26, 43, 0.1);
+  /* Warm secondary for flashcards / secondary feature signals */
+  --flash: #b87a2f;
+  --flash-hover: #9e6624;
+  --flash-soft: #f6ecdc;
+  --flash-ring: rgba(184, 122, 47, 0.18);
 }
 
 .dark {
@@ -30,10 +35,19 @@
   --accent-text: #121018;
   --ring: rgba(181, 154, 230, 0.24);
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --flash: #e0b06a;
+  --flash-hover: #ebc48a;
+  --flash-soft: #2f271c;
+  --flash-ring: rgba(224, 176, 106, 0.22);
 }
 
 @theme inline {
   --font-sans: var(--font-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
 }
 
 html,
@@ -44,6 +58,48 @@ body {
 
 body {
   font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
+/* Circular theme reveal from the toggle click point */
+@supports (view-transition-name: root) {
+  ::view-transition {
+    pointer-events: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 9999;
+    animation: lyra-theme-circle 0.7s cubic-bezier(0.33, 1, 0.32, 1) both;
+  }
+}
+
+@keyframes lyra-theme-circle {
+  from {
+    clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+  to {
+    clip-path: circle(var(--theme-r, 100vmax) at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
 }
 
 * {
@@ -139,10 +195,48 @@ a[aria-disabled="true"] {
 
 .lyra-grid {
   background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 75%);
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--text) 11%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--text) 11%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 78% at 50% 28%, black 28%, transparent 78%);
+}
+
+.dark .lyra-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--text) 14%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--text) 14%, transparent) 1px,
+      transparent 1px
+    );
+}
+
+.lyra-grid-fine {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--text) 8%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--text) 8%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 70% 60% at 70% 40%, black 10%, transparent 70%);
 }
 
 @keyframes lyra-rise {

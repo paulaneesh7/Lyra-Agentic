@@ -11,11 +11,13 @@ export function HeroDemo() {
   const [q, setQ] = useState("");
   const [a, setA] = useState("");
   const [done, setDone] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     let i = 0;
     let j = 0;
     let phase: "q" | "a" | "done" = "q";
+    let finishTimer: number | undefined;
     const timer = window.setInterval(() => {
       if (phase === "q") {
         i += 1;
@@ -28,20 +30,31 @@ export function HeroDemo() {
         setA(ANSWER.slice(0, j));
         if (j >= ANSWER.length) {
           phase = "done";
-          setDone(true);
           window.clearInterval(timer);
+          setScanning(true);
+          finishTimer = window.setTimeout(() => {
+            setScanning(false);
+            setDone(true);
+          }, 1200);
         }
       }
     }, 28);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      if (finishTimer) window.clearTimeout(finishTimer);
+    };
   }, []);
 
   const words = a.trim() ? a.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow)]">
+    <div className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-4 shadow-[var(--shadow)] sm:p-5">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/50 to-transparent" />
+      {scanning && (
+        <div className="lyra-scan pointer-events-none absolute inset-x-4 top-0 h-16 bg-gradient-to-b from-[var(--accent)]/0 via-[var(--accent)]/18 to-[var(--accent)]/0" />
+      )}
       <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--text-muted)]">
-        <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 font-medium text-[var(--accent)]">
+        <span className="rounded-md bg-[var(--accent-soft)] px-2.5 py-1 font-medium text-[var(--accent)]">
           GATE CS · Operating Systems
         </span>
         <span className="tabular-nums">
@@ -51,7 +64,7 @@ export function HeroDemo() {
       <p className="mt-3 min-h-12 text-sm font-medium leading-relaxed">{q || "\u00a0"}</p>
       <p className="mt-3 min-h-24 text-sm leading-relaxed text-[var(--text-muted)]">
         {a}
-        {!done && (
+        {!done && !scanning && (
           <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-[var(--accent)] align-middle" />
         )}
       </p>

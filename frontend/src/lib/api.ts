@@ -5,6 +5,51 @@ const LEGACY_TOKEN_KEY = "gatepilot.access";
 const CREDITS_KEY = "lyra.credits";
 const REQUEST_MS = 12_000;
 
+let handlingSessionExpiry = false;
+
+function isAuthCredentialPath(path: string) {
+  return (
+    path.includes("/api/auth/login") ||
+    path.includes("/api/auth/signup") ||
+    path.includes("/api/auth/google")
+  );
+}
+
+/** Any 401 outside login/signup means the access token is missing or invalid. */
+function isSessionExpiredStatus(status: number) {
+  return status === 401;
+}
+
+/** Clear the session and hard-navigate to login. Returns true if a redirect was started. */
+function handleSessionExpired(message?: string): boolean {
+  if (typeof window === "undefined") return false;
+  if (handlingSessionExpiry) return true;
+  if (window.location.pathname.startsWith("/login") || window.location.pathname.startsWith("/auth/")) {
+    clearSession();
+    return false;
+  }
+  handlingSessionExpiry = true;
+  clearSession();
+  try {
+    sessionStorage.setItem(
+      "lyra.flash",
+      JSON.stringify({
+        type: "session-expired",
+        message: message?.trim() || "Session expired. Please sign in again.",
+      }),
+    );
+  } catch {
+    /* ignore quota / private mode */
+  }
+  const next = `${window.location.pathname}${window.location.search}`;
+  const login =
+    next && next !== "/"
+      ? `/login?next=${encodeURIComponent(next)}&reason=session`
+      : "/login?reason=session";
+  window.location.assign(login);
+  return true;
+}
+
 export function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(LEGACY_TOKEN_KEY);
@@ -72,7 +117,7 @@ export async function api<T>(path: string, init: RequestInit & { timeoutMs?: num
     throw new ApiError(
       aborted
         ? "The API took too long to respond. Please try again."
-        : "Cannot reach the API at localhost:8000. If the backend is running, retry — a long evaluation may have dropped the connection.",
+        : "Cannot reach the API at localhost:8000. If the backend is running, retry ? a long evaluation may have dropped the connection.",
       0,
       aborted ? "api_timeout" : "api_unreachable",
     );
@@ -88,6 +133,13 @@ export async function api<T>(path: string, init: RequestInit & { timeoutMs?: num
       code = body?.error?.code;
     } catch {
       /* ignore */
+    }
+    if (!isAuthCredentialPath(path) && isSessionExpiredStatus(res.status)) {
+      if (handleSessionExpired(message)) {
+        // Redirect started ? don't reject into Next's error overlay.
+        return new Promise<T>(() => {});
+      }
+      throw new ApiError(message, res.status, code);
     }
     throw new ApiError(message, res.status, code);
   }
@@ -127,13 +179,19 @@ export async function* streamSse(
   }
   if (!res.ok) {
     let message = "Something went wrong. Please try again.";
+    let code: string | undefined;
     try {
       const payload = await res.json();
       message = payload?.error?.message ?? message;
+      code = payload?.error?.code;
     } catch {
       /* ignore */
     }
-    throw new ApiError(message, res.status);
+    if (isSessionExpiredStatus(res.status)) {
+      if (handleSessionExpired(message)) return;
+      throw new ApiError(message, res.status, code);
+    }
+    throw new ApiError(message, res.status, code);
   }
   if (!res.body) throw new ApiError("Streaming is not available from the API.", 0, "no_stream");
   const reader = res.body.getReader();

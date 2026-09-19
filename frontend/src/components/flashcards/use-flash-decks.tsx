@@ -32,7 +32,9 @@ function useFlashDecksState() {
     setPins(loadPins());
     const unsub = subscribeFlashDecks(() => setDecksState(getFlashDecks()));
     void refreshFlashDecks().finally(() => setLoading(false));
-    return unsub;
+    return () => {
+      unsub();
+    };
   }, []);
 
   function togglePin(id: string) {

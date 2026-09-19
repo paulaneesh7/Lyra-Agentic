@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Clock3, Layers, WandSparkles } from "lucide-react";
+import { ArrowRight, Layers, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -175,13 +175,13 @@ export default function FlashcardsGeneratePage() {
   }
 
   return (
-    <>
-      <div className="flex-1 overflow-y-auto px-4 pb-32 pt-6 md:px-8 lg:px-10">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="h-full overflow-y-auto overscroll-contain px-4 pb-16 pt-4 md:px-8 lg:px-10 [scrollbar-gutter:stable]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Revision studio</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Generate flashcards</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight sm:text-3xl">Generate flashcards</h1>
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
               After generate, you land on a unique deck URL. Flip cards, then tap Got it or Still shaky — Due and Shaky update from that.
             </p>
           </div>
@@ -190,11 +190,11 @@ export default function FlashcardsGeneratePage() {
             onClick={examWeekPack}
             className="inline-flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm font-medium shadow-sm transition hover:border-[var(--accent)]"
           >
-            <Layers size={15} className="text-[var(--accent)]" /> Exam-week pack
+            <Layers size={15} className="text-[var(--flash)]" /> Exam-week pack
           </button>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {GATE_PAPERS.map((p) => (
             <button
               key={p.id}
@@ -211,7 +211,7 @@ export default function FlashcardsGeneratePage() {
           ))}
         </div>
 
-        <div className="mt-8 grid gap-10 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="mt-5 grid items-start gap-6 pb-8 xl:grid-cols-[1.15fr_0.85fr] xl:gap-8">
           <div>
             <div className="flex items-end justify-between gap-3">
               <div>
@@ -432,7 +432,7 @@ export default function FlashcardsGeneratePage() {
               Context <span className="font-normal text-[var(--text-muted)]">optional</span>
             </p>
             <Textarea
-              className="mt-2 min-h-28"
+              className="mt-2 min-h-24"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Paste class notes, a theorem, or a worked example."
@@ -441,30 +441,22 @@ export default function FlashcardsGeneratePage() {
         </div>
       </div>
 
-      <div className="sticky bottom-0 border-t border-[var(--line)] bg-[var(--bg)]/95 px-4 py-3 backdrop-blur md:px-8">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-2">
-          <Button className="h-12 w-full max-w-xl text-[15px]" disabled={busy} onClick={() => void generate()}>
-            {busy ? (
-              <>
-                <Loader size="sm" /> {STEPS[step]}
-              </>
-            ) : (
-              <>
-                <WandSparkles size={16} /> Generate {count} flashcards <ArrowRight size={16} />
-              </>
-            )}
-          </Button>
-          <p className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted)]">
-            <span>
-              {GENERATE_COST} credits{credits != null ? ` · ${credits} left` : ""}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Clock3 size={11} /> ~{reviewMins} min review
-            </span>
-            <span>{focusMeta?.label}</span>
-          </p>
-        </div>
+      <div className="absolute inset-x-0 bottom-0 z-10 flex h-14 items-center gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 md:px-8">
+        <Button className="mx-auto h-9 w-full max-w-3xl text-sm sm:mx-0 sm:flex-1" disabled={busy} onClick={() => void generate()}>
+          {busy ? (
+            <>
+              <Loader size="sm" /> {STEPS[step]}
+            </>
+          ) : (
+            <>
+              <WandSparkles size={15} /> Generate {count} flashcards <ArrowRight size={15} />
+            </>
+          )}
+        </Button>
+        <p className="hidden shrink-0 text-[11px] text-[var(--text-muted)] sm:block">
+          {GENERATE_COST} cr{credits != null ? ` · ${credits} left` : ""} · ~{reviewMins} min
+        </p>
       </div>
-    </>
+    </div>
   );
 }

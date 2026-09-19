@@ -22,19 +22,39 @@ function LoginInner() {
     if (error === "google") {
       toast.error("Google sign-in failed. Please try again.");
     }
+
+    const reason = params.get("reason");
+    if (reason === "session") {
+      toast.error("Session expired. Please sign in again.", { id: "session-expired" });
+    }
+
+    try {
+      const raw = sessionStorage.getItem("lyra.flash");
+      if (!raw) return;
+      sessionStorage.removeItem("lyra.flash");
+      const flash = JSON.parse(raw) as { type?: string; message?: string };
+      if (flash.type === "session-expired") {
+        toast.error(flash.message || "Session expired. Please sign in again.", {
+          id: "session-expired",
+        });
+      }
+    } catch {
+      /* ignore */
+    }
   }, [params]);
 
   useEffect(() => {
     if (loading) return;
     if (user) {
-      router.replace("/dashboard");
+      const next = params.get("next");
+      router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
       return;
     }
     if (getToken() && !triedStoredSession.current) {
       triedStoredSession.current = true;
       void refresh();
     }
-  }, [loading, user, refresh, router]);
+  }, [loading, user, refresh, router, params]);
 
   return (
     <main className="relative grid min-h-screen place-items-center bg-[var(--bg)] px-4">
