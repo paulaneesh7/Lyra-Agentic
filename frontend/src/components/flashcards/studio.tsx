@@ -36,12 +36,14 @@ export function FlashLayout({
   };
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col lg:min-h-screen lg:flex-row">
-      <div className="hidden h-screen md:flex">
+    // Row only from lg — below that the rail is a drawer (same pattern as evaluation).
+    // Showing the rail from md while still flex-col made it h-full and crushed the studio to 0 height.
+    <div className="flex h-0 min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="hidden h-full min-h-0 shrink-0 lg:flex">
         <HistoryRail {...railProps} open={flash.historyOpen} onOpenChange={flash.setHistoryOpen} />
       </div>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="flex items-center justify-between border-b border-[var(--line)] px-3 py-2.5 md:hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--line)] px-3 py-2 lg:hidden">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -56,9 +58,9 @@ export function FlashLayout({
             <Plus size={12} /> New
           </Link>
         </div>
-        <div className="min-h-0 flex-1">{children}</div>
+        <div className="relative min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
-      <MobileDrawer open={mobileOpen} onClose={closeMobile} title="Deck history" side="left" breakpoint="md">
+      <MobileDrawer open={mobileOpen} onClose={closeMobile} title="Deck history" side="left" breakpoint="lg">
         <HistoryRail {...railProps} open onOpenChange={() => setMobileOpen(false)} variant="sheet" />
       </MobileDrawer>
     </div>

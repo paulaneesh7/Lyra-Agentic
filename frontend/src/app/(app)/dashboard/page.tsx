@@ -142,8 +142,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <article className="flex flex-col rounded-md border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,var(--accent-soft))] p-6 dark:bg-[linear-gradient(180deg,var(--bg-elevated),var(--accent-soft))]">
-          <span className="grid h-11 w-11 place-items-center rounded-md bg-white/90 text-[var(--accent)] ring-1 ring-[var(--line)] dark:bg-[var(--bg-elevated)]">
+        <article className="flex flex-col rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,var(--accent-soft))] p-6 dark:bg-[linear-gradient(180deg,var(--bg-elevated),var(--accent-soft))]">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/90 text-[var(--accent)] ring-1 ring-[var(--line)] dark:bg-[var(--bg-elevated)]">
             <ClipboardList size={20} />
           </span>
           <h2 className="mt-5 text-xl font-semibold">Answer Evaluation</h2>
@@ -152,14 +152,14 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/evaluation"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--accent)] py-2.5 text-sm font-medium text-white"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--accent)] py-2.5 text-sm font-medium text-[var(--accent-text)] transition hover:bg-[var(--accent-hover)]"
           >
             Open Answer Evaluation <ArrowRight size={16} />
           </Link>
         </article>
 
-        <article className="flex flex-col rounded-md border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f4f1fa)] p-6 dark:bg-[linear-gradient(180deg,var(--bg-elevated),var(--bg-muted))]">
-          <span className="grid h-11 w-11 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
+        <article className="flex flex-col rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,var(--flash-soft))] p-6 dark:bg-[linear-gradient(180deg,var(--bg-elevated),var(--flash-soft))]">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--flash-soft)] text-[var(--flash)] ring-1 ring-[var(--flash-ring)]">
             <Layers size={20} />
           </span>
           <h2 className="mt-5 text-xl font-semibold">Flashcards</h2>
@@ -168,7 +168,7 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/flashcards"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] py-2.5 text-sm font-medium"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] py-2.5 text-sm font-medium transition hover:bg-[var(--bg-muted)]"
           >
             Open Flashcards <ArrowRight size={16} />
           </Link>

@@ -189,7 +189,7 @@ export function DeckBoard({
           : "No cards in this deck.";
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
+    <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 md:px-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">

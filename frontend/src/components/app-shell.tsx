@@ -25,10 +25,10 @@ import { api, cacheCredits, peekCredits } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/dashboard", label: "Overview", hint: "Progress and shortcuts", icon: LayoutGrid },
-  { href: "/evaluation", label: "Answer Evaluation", hint: "Score GATE answers", icon: ClipboardList },
-  { href: "/flashcards", label: "Flashcards", hint: "Spaced revision decks", icon: Layers },
-  { href: "/credits", label: "Credits", hint: "Wallet and top-ups", icon: Wallet },
+  { href: "/dashboard", label: "Overview", hint: "Progress and shortcuts", icon: LayoutGrid, tone: "accent" as const },
+  { href: "/evaluation", label: "Answer Evaluation", hint: "Score GATE answers", icon: ClipboardList, tone: "accent" as const },
+  { href: "/flashcards", label: "Flashcards", hint: "Spaced revision decks", icon: Layers, tone: "flash" as const },
+  { href: "/credits", label: "Credits", hint: "Wallet and top-ups", icon: Wallet, tone: "accent" as const },
 ];
 
 const COLLAPSE_KEY = "lyra.sidebar.collapsed";
@@ -37,6 +37,7 @@ const TITLES: Record<string, string> = {
   "/dashboard": "Overview",
   "/evaluation": "Evaluation",
   "/flashcards": "Flashcards",
+  "/credits/history": "Credit history",
   "/credits": "Credits",
   "/settings": "Account",
   "/tutor": "Tutor",
@@ -156,7 +157,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const evalsLeft = credits != null ? Math.floor(credits / 10) : null;
 
   const pageTitle =
-    Object.entries(TITLES).find(([href]) => pathname === href || (href !== "/dashboard" && pathname.startsWith(href)))?.[1] ??
+    Object.entries(TITLES)
+      .sort(([a], [b]) => b.length - a.length)
+      .find(([href]) => pathname === href || (href !== "/dashboard" && pathname.startsWith(href)))?.[1] ??
     "Lyra";
 
   const menu =
@@ -272,9 +275,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span
                 className={cn(
                   "grid h-8 w-8 shrink-0 place-items-center rounded-lg",
-                  active
-                    ? "bg-white text-[var(--accent)] shadow-sm dark:bg-white/10"
-                    : "bg-white/70 text-[var(--accent)] dark:bg-white/10",
+                  item.tone === "flash"
+                    ? active
+                      ? "bg-[var(--flash-soft)] text-[var(--flash)] shadow-sm"
+                      : "bg-[var(--flash-soft)]/80 text-[var(--flash)]"
+                    : active
+                      ? "bg-white text-[var(--accent)] shadow-sm dark:bg-white/10"
+                      : "bg-white/70 text-[var(--accent)] dark:bg-white/10",
                 )}
               >
                 <Icon size={16} />
@@ -342,16 +349,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="p-3">
         <div
           className={cn(
-            "flex h-10 items-center justify-between rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-1",
-            compact && "h-auto flex-col justify-center gap-2 px-1 py-2",
+            "flex h-10 items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-1.5",
+            compact && "h-auto flex-col justify-center gap-2 px-1.5 py-2",
           )}
         >
-          <ThemeToggle />
+          <ThemeToggle variant="ghost" />
           <button
             ref={avatarButtonRef}
             type="button"
             onClick={(e) => openMenu(e.currentTarget)}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full p-0 leading-none"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full p-0 leading-none transition hover:opacity-90"
             aria-label="Account menu"
           >
             <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
@@ -377,14 +384,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </aside>
   );
 
+  const lockViewport =
+    pathname.startsWith("/flashcards") || pathname.startsWith("/evaluation");
+
   return (
     <div
       className={cn(
-        "min-h-screen bg-[var(--bg)] transition-[grid-template-columns] duration-300 ease-out lg:grid",
-        collapsed ? "lg:grid-cols-[72px_1fr]" : "lg:grid-cols-[260px_1fr]",
+        "bg-[var(--bg)] transition-[grid-template-columns] duration-300 ease-out lg:grid lg:grid-rows-[minmax(0,1fr)]",
+        lockViewport ? "h-dvh max-h-dvh overflow-hidden" : "min-h-screen",
+        collapsed ? "lg:grid-cols-[72px_minmax(0,1fr)]" : "lg:grid-cols-[260px_minmax(0,1fr)]",
       )}
     >
-      <div className="sticky top-0 z-20 hidden h-dvh overflow-clip border-r border-[var(--line)] bg-[var(--bg-sidebar)] lg:block">
+      <div className="sticky top-0 z-20 hidden h-dvh min-h-0 overflow-clip border-r border-[var(--line)] bg-[var(--bg-sidebar)] lg:block">
         {sidebar(collapsed)}
       </div>
 
@@ -392,8 +403,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {sidebar(false, true)}
       </MobileDrawer>
 
-      <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-3 py-2.5 backdrop-blur lg:hidden">
+      <div
+        className={cn(
+          "flex min-h-0 min-w-0 flex-col",
+          lockViewport ? "h-dvh max-h-dvh overflow-hidden" : "min-h-screen",
+        )}
+      >
+        <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-3 py-2.5 backdrop-blur lg:hidden">
           <button
             type="button"
             className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]"
@@ -403,20 +419,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Menu size={18} />
           </button>
           <p className="text-sm font-semibold tracking-tight">{pageTitle}</p>
-          <div className="flex h-9 items-center gap-0.5 rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] px-0.5">
-            <ThemeToggle />
+          <div className="flex h-9 items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-1.5">
+            <ThemeToggle variant="ghost" />
             <button
               ref={mobileAvatarRef}
               type="button"
               onClick={(e) => openMenu(e.currentTarget)}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full p-0 leading-none"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full p-0 leading-none transition hover:opacity-90"
               aria-label="Account menu"
             >
               <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
             </button>
           </div>
         </header>
-        <main className={cn("min-w-0 flex-1 overflow-x-hidden", pathname.startsWith("/flashcards") || pathname.startsWith("/evaluation") ? "p-0" : "px-4 py-6 md:px-8 lg:px-10")}>{children}</main>
+        <main
+          className={cn(
+            "flex min-h-0 min-w-0 flex-1 flex-col",
+            lockViewport
+              ? "overflow-hidden p-0"
+              : "overflow-x-hidden px-4 py-6 md:px-8 lg:px-10",
+          )}
+        >
+          {children}
+        </main>
       </div>
       {menu}
       {flyout}
