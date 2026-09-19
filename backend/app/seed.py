@@ -235,9 +235,9 @@ def _seed(db: Session) -> None:
     )
 
     admin = User(
-        email="admin@gatepilot.ai",
+        email="admin@lyra.ai",
         hashed_password=None,
-        full_name="GATEPilot Admin",
+        full_name="Lyra Admin",
         role=UserRole.ADMIN,
         onboarding_completed=True,
     )
