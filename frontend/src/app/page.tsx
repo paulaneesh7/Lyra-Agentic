@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
+import { GoogleButton } from "@/components/google-button";
 import { HeroDemo } from "@/components/landing/hero-demo";
 import { Logo } from "@/components/logo";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { brand } from "@/lib/brand";
@@ -101,7 +103,7 @@ export default function LandingPage() {
     <div className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
       <header className="sticky top-0 z-50 border-b border-[var(--line)]/80 bg-[var(--bg)]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-5">
-          <Logo subtitle="Practice · Evaluate · Qualify" />
+          <Logo hideSubtitleOnMobile />
           <nav className="hidden items-center gap-1 text-sm text-[var(--text-muted)] md:flex">
             {NAV_LINKS.map((item) => (
               <a
@@ -124,23 +126,19 @@ export default function LandingPage() {
                 <UserAvatar name={user.full_name} src={user.avatar_url} size={28} />
               </Link>
             ) : (
-              <Link
-                href="/login"
-                className="hidden rounded-lg px-2.5 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-muted)] hover:text-[var(--text)] sm:inline"
-              >
-                Sign in
-              </Link>
+              <GoogleButton
+                variant="header"
+                label={
+                  <>
+                    <span className="sm:hidden">Sign In</span>
+                    <span className="hidden sm:inline">Continue with Google</span>
+                  </>
+                }
+              />
             )}
             <button
               type="button"
-              onClick={goApp}
-              className="hidden rounded-full bg-[var(--accent)] px-3.5 py-2 text-sm font-medium text-[var(--accent-text)] shadow-[0_8px_20px_var(--ring)] transition hover:bg-[var(--accent-hover)] md:inline-flex"
-            >
-              Get started
-            </button>
-            <button
-              type="button"
-              className="grid h-9 w-9 place-items-center rounded-full border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--text)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--text)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] md:hidden"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
@@ -177,7 +175,7 @@ export default function LandingPage() {
           )}
         >
           <div className="flex items-center justify-between px-4 py-3.5">
-            <Logo subtitle="Write. Evaluate. Qualify." />
+            <Logo />
             <button
               type="button"
               onClick={() => setMenuOpen(false)}
@@ -198,22 +196,15 @@ export default function LandingPage() {
                 {item.label}
               </a>
             ))}
-            {!user && (
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-                className="mt-1 block rounded-xl px-3 py-3.5 text-[15px] font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-muted)] hover:text-[var(--text)]"
+            {user ? (
+              <button
+                type="button"
+                onClick={goApp}
+                className="mt-3 mb-1 w-full rounded-md bg-[var(--accent)] py-3 text-sm font-medium text-[var(--accent-text)] shadow-[0_10px_24px_var(--ring)]"
               >
-                Sign in
-              </Link>
-            )}
-            <button
-              type="button"
-              onClick={goApp}
-              className="mt-3 mb-1 w-full rounded-full bg-[var(--accent)] py-3 text-sm font-medium text-[var(--accent-text)] shadow-[0_10px_24px_var(--ring)]"
-            >
-              {user ? "Open workspace" : "Get started"}
-            </button>
+                Open workspace
+              </button>
+            ) : null}
           </nav>
         </div>
       </div>
@@ -248,31 +239,32 @@ export default function LandingPage() {
               Type or photograph a GATE CS solution. {brand.short} scores the approach, flags missing cases, and shows
               what a high-scoring answer usually includes — in minutes, not days.
             </p>
-            <div className="lyra-rise lyra-rise-3 mt-8 flex flex-wrap items-center gap-3">
+            <div className="lyra-rise lyra-rise-3 mt-8 flex w-full flex-nowrap items-stretch gap-2">
               <button
                 type="button"
                 disabled={loading}
                 onClick={goApp}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-[var(--accent-text)] shadow-[0_12px_32px_var(--ring)] transition hover:bg-[var(--accent-hover)] hover:shadow-[0_14px_36px_var(--ring)]"
+                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-[var(--accent)] px-3 py-2.5 text-[13px] font-medium text-[var(--accent-text)] shadow-[0_12px_32px_var(--ring)] transition hover:bg-[var(--accent-hover)] hover:shadow-[0_14px_36px_var(--ring)] sm:flex-none sm:gap-2 sm:px-6 sm:text-sm"
               >
-                Get started <ArrowRight size={16} />
+                Get started <ArrowRight size={15} className="shrink-0" />
               </button>
               <a
                 href="#product"
-                className="rounded-full border border-[var(--line)] bg-[var(--bg-elevated)]/80 px-5 py-2.5 text-sm backdrop-blur-sm transition hover:border-[var(--accent)]/50 hover:bg-[var(--bg-muted)]"
+                className="inline-flex min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]/80 px-3 py-2.5 text-center text-[13px] backdrop-blur-sm transition hover:border-[var(--accent)]/50 hover:bg-[var(--bg-muted)] sm:flex-none sm:px-6 sm:text-sm"
               >
-                See a sample report
+                <span className="sm:hidden">Sample report</span>
+                <span className="hidden sm:inline">See a sample report</span>
               </a>
             </div>
-            <div className="lyra-rise lyra-rise-4 mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-[var(--line)] pt-6 text-sm">
+            <div className="lyra-rise lyra-rise-4 mt-12 grid w-full grid-cols-3 gap-2 border-t border-[var(--line)] pt-6 text-sm sm:flex sm:gap-x-8 sm:gap-y-4">
               {[
                 ["< 3 min", "per evaluation"],
                 ["6 criteria", "GATE-style rubric"],
                 ["24/7", "practice feedback"],
               ].map(([value, label]) => (
-                <div key={label}>
-                  <p className="font-semibold tracking-tight">{value}</p>
-                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">{label}</p>
+                <div key={label} className="min-w-0">
+                  <p className="text-[13px] font-semibold tracking-tight sm:text-sm">{value}</p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-[var(--text-muted)] sm:text-xs">{label}</p>
                 </div>
               ))}
             </div>
@@ -518,7 +510,7 @@ export default function LandingPage() {
                   type="button"
                   onClick={goApp}
                   className={cn(
-                    "mt-6 w-full rounded-full py-2.5 text-sm font-medium transition",
+                    "mt-6 w-full rounded-md py-2.5 text-sm font-medium transition",
                     plan.highlight
                       ? "bg-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent-hover)]"
                       : "border border-[var(--line)] bg-[var(--bg-elevated)] hover:border-[var(--accent)] hover:bg-[var(--bg-muted)]",
@@ -546,7 +538,7 @@ export default function LandingPage() {
             <button
               type="button"
               onClick={goApp}
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-[var(--accent-text)] shadow-[0_12px_28px_var(--ring)] transition hover:bg-[var(--accent-hover)]"
+              className="mt-7 inline-flex min-w-[12rem] items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-6 py-2.5 text-sm font-medium text-[var(--accent-text)] shadow-[0_12px_28px_var(--ring)] transition hover:bg-[var(--accent-hover)]"
             >
               Start your first evaluation <ArrowRight size={16} />
             </button>
@@ -557,7 +549,7 @@ export default function LandingPage() {
       <footer className="border-t border-[var(--line)]">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-5 md:grid-cols-4">
           <div>
-            <Logo subtitle="GATE CS prep" />
+            <Logo subtitle={brand.line} />
             <p className="mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
               AI evaluation and revision decks for GATE Computer Science. Prepaid credits, no subscription.
             </p>
@@ -601,6 +593,8 @@ export default function LandingPage() {
           © {new Date().getFullYear()} {brand.name}
         </p>
       </footer>
+
+      <ScrollToTop />
     </div>
   );
 }

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.ai.graphs.flashcards import flashcard_graph
 from app.ai.graphs.tutor import tutor_graph
+from app.ai.tracing import traced_invoke, tracing_context
 from app.core.exceptions import AppError, NotFoundError
 from app.models.chat_threads import TutorThread
 from app.models.enums import CreditTransactionType, Difficulty, FlashcardFocus, ReviewRating
@@ -27,25 +28,32 @@ class FlashcardService:
             "flashcard_generation",
             CreditTransactionType.FLASHCARD_GENERATION,
         )
-        result = flashcard_graph.invoke(
-            {
-                "paper": payload.get("paper_code", "CS"),
-                "subject": payload.get("subject_name", ""),
-                "unit": payload.get("unit_name", ""),
-                "topic": payload.get("topic_name", ""),
-                "focus": payload.get("focus", "key_concepts"),
-                "count": payload.get("count", 8),
-                "notes": payload.get("notes", ""),
-                "difficulty": payload.get("difficulty", "mixed"),
-                "include_complexity": payload.get("include_complexity", True),
-                "include_traps": payload.get("include_traps", True),
-                "include_nat": payload.get("include_nat", False),
-                "include_mnemonics": payload.get("include_mnemonics", False),
-                "include_compare": payload.get("include_compare", True),
-                "exam_weight": payload.get("exam_weight", "mixed"),
-                "card_format": payload.get("card_format", "qa"),
-            }
-        )
+        with tracing_context(
+            user_id=str(user.id),
+            session_id=f"flashcards:{user.id}",
+            tags=["flashcards"],
+        ):
+            result = traced_invoke(
+                flashcard_graph,
+                {
+                    "paper": payload.get("paper_code", "CS"),
+                    "subject": payload.get("subject_name", ""),
+                    "unit": payload.get("unit_name", ""),
+                    "topic": payload.get("topic_name", ""),
+                    "focus": payload.get("focus", "key_concepts"),
+                    "count": payload.get("count", 8),
+                    "notes": payload.get("notes", ""),
+                    "difficulty": payload.get("difficulty", "mixed"),
+                    "include_complexity": payload.get("include_complexity", True),
+                    "include_traps": payload.get("include_traps", True),
+                    "include_nat": payload.get("include_nat", False),
+                    "include_mnemonics": payload.get("include_mnemonics", False),
+                    "include_compare": payload.get("include_compare", True),
+                    "exam_weight": payload.get("exam_weight", "mixed"),
+                    "card_format": payload.get("card_format", "qa"),
+                },
+                name="flashcard_graph",
+            )
         topic = (payload.get("topic_name") or "Topic").strip()
         deck = FlashcardDeck(
             user_id=user.id,
@@ -206,14 +214,21 @@ class TutorService:
         )
         self.db.add(ChatMessage(tutor_thread_id=thread.id, role="user", content=message))
         history = [{"role": m.role, "content": m.content} for m in (thread.messages or [])]
-        reply = tutor_graph.invoke(
-            {
-                "mode": mode,
-                "paper": "GATE CS",
-                "history": history,
-                "user_message": message,
-            }
-        )["reply"]
+        with tracing_context(
+            user_id=str(user.id),
+            session_id=str(thread.id),
+            tags=["tutor", mode],
+        ):
+            reply = traced_invoke(
+                tutor_graph,
+                {
+                    "mode": mode,
+                    "paper": "GATE CS",
+                    "history": history,
+                    "user_message": message,
+                },
+                name="tutor_graph",
+            )["reply"]
         assistant = ChatMessage(tutor_thread_id=thread.id, role="assistant", content=reply)
         self.db.add(assistant)
         self.db.flush()

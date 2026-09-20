@@ -1,6 +1,9 @@
 export const brand = {
   name: process.env.NEXT_PUBLIC_APP_NAME ?? "Lyra",
-  tagline: "AI-powered GATE prep",
+  /** Product one-liner for meta / marketing */
+  tagline: "Ink to insight — GATE CS answer scoring",
+  /** Compact wordmark line under the logo */
+  line: "Ink to insight",
   short: "Lyra",
 };
 

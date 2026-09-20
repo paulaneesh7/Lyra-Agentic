@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/loader";
+import { clearGoogleAuthPending, GOOGLE_SIGNIN_TOAST_ID } from "@/lib/google-auth";
 import { setSession } from "@/lib/api";
 
 function readAccessToken(params: URLSearchParams) {
@@ -25,10 +26,14 @@ function CallbackInner() {
     if (ran.current) return;
     ran.current = true;
 
-    toast.dismiss("google-signin");
+    clearGoogleAuthPending();
+    toast.dismiss(GOOGLE_SIGNIN_TOAST_ID);
     const token = readAccessToken(params);
     if (!token) {
-      toast.error("Google sign-in was cancelled or failed.");
+      toast.error("Sign-in failed", {
+        id: "google-signin-failed",
+        description: "Google sign-in was cancelled or did not complete. Please try again.",
+      });
       router.replace("/login");
       return;
     }

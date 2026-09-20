@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.ai.prompts import get_prompt
 from app.ai.providers.factory import get_ai_provider
 from app.ai.schemas.outputs import STUDY_PLAN_JSON_SCHEMA, StudyPlanDraft
+from app.ai.tracing import tracing_context
 from app.models.study import StudyPlan, StudyTask
 from app.models.user import User
 from app.services.recommendations import RecommendationEngine
@@ -18,17 +19,18 @@ class StudyPlanService:
         profile = user.profile
         provider = get_ai_provider()
         _, system = get_prompt("study_plan")
-        raw = provider.complete_json(
-            system=system,
-            user=(
-                f"Level: {getattr(profile, 'preparation_level', None)}\n"
-                f"Daily minutes: {getattr(profile, 'daily_study_minutes', 90)}\n"
-                f"Target score: {getattr(profile, 'target_score', None)}\n"
-                f"Mode: {getattr(profile, 'exam_mode', None)}"
-            ),
-            schema_name="study_plan",
-            schema=STUDY_PLAN_JSON_SCHEMA,
-        )
+        with tracing_context(user_id=str(user.id), tags=["study_plan"]):
+            raw = provider.complete_json(
+                system=system,
+                user=(
+                    f"Level: {getattr(profile, 'preparation_level', None)}\n"
+                    f"Daily minutes: {getattr(profile, 'daily_study_minutes', 90)}\n"
+                    f"Target score: {getattr(profile, 'target_score', None)}\n"
+                    f"Mode: {getattr(profile, 'exam_mode', None)}"
+                ),
+                schema_name="study_plan",
+                schema=STUDY_PLAN_JSON_SCHEMA,
+            )
         draft = StudyPlanDraft.model_validate(raw)
         plan = StudyPlan(
             user_id=user.id,
