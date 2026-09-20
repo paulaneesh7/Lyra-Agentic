@@ -10,6 +10,7 @@ from app.ai.graphs.followup import followup_graph
 from app.ai.ocr.factory import get_ocr_provider
 from app.ai.providers.factory import get_ai_provider
 from app.ai.storage import get_storage
+from app.ai.tracing import traced_invoke, tracing_context
 from app.core.exceptions import AppError, NotFoundError
 from app.models.enums import CreditTransactionType, EvaluationStatus
 from app.models.evaluation import ChatMessage, Evaluation, EvaluationChat, EvaluationImage
@@ -95,18 +96,27 @@ class EvaluationService:
         self.db.flush()
         started = datetime.now(timezone.utc)
         try:
-            result = evaluation_graph.invoke(
-                {
-                    "question_text": evaluation.question_text,
-                    "solution_text": evaluation.solution_text,
-                    "extracted_text": evaluation.extracted_text,
-                    "question_type": getattr(evaluation.question_type, "value", evaluation.question_type),
-                    "topic": topic or "",
-                    "paper": paper or "GATE CS",
-                    "mark_weight": mark_weight or "",
-                    "word_target": word_target or 0,
-                }
-            )
+            with tracing_context(
+                user_id=str(user.id),
+                session_id=str(evaluation.id),
+                tags=["evaluation"],
+            ):
+                result = traced_invoke(
+                    evaluation_graph,
+                    {
+                        "question_text": evaluation.question_text,
+                        "solution_text": evaluation.solution_text,
+                        "extracted_text": evaluation.extracted_text,
+                        "question_type": getattr(
+                            evaluation.question_type, "value", evaluation.question_type
+                        ),
+                        "topic": topic or "",
+                        "paper": paper or "GATE CS",
+                        "mark_weight": mark_weight or "",
+                        "word_target": word_target or 0,
+                    },
+                    name="evaluation_graph",
+                )
             payload = result["result"]
             if topic:
                 payload["subject"] = topic
@@ -147,7 +157,12 @@ class EvaluationService:
         system, user_prompt, evaluation = self._prepare_follow_up(user, evaluation_id, message)
         if evaluation.chat is None:
             raise AppError("Follow-up chat is not available.", 500, "chat_missing")
-        reply = get_ai_provider().complete_text(system=system, user=user_prompt)
+        with tracing_context(
+            user_id=str(user.id),
+            session_id=str(evaluation_id),
+            tags=["evaluation", "followup"],
+        ):
+            reply = get_ai_provider().complete_text(system=system, user=user_prompt)
         assistant = ChatMessage(chat_id=evaluation.chat.id, role="assistant", content=reply)
         self.db.add(assistant)
         self.db.flush()
@@ -158,11 +173,16 @@ class EvaluationService:
         if evaluation.chat is None:
             raise AppError("Follow-up chat is not available.", 500, "chat_missing")
         chunks: list[str] = []
-        for delta in get_ai_provider().stream_text(system=system, user=user_prompt):
-            if not delta:
-                continue
-            chunks.append(delta)
-            yield {"delta": delta}
+        with tracing_context(
+            user_id=str(user.id),
+            session_id=str(evaluation_id),
+            tags=["evaluation", "followup", "stream"],
+        ):
+            for delta in get_ai_provider().stream_text(system=system, user=user_prompt):
+                if not delta:
+                    continue
+                chunks.append(delta)
+                yield {"delta": delta}
         assistant = ChatMessage(
             chat_id=evaluation.chat.id,
             role="assistant",
@@ -202,18 +222,25 @@ class EvaluationService:
         history = [
             {"role": m.role, "content": m.content} for m in evaluation.chat.messages if m.role in {"user", "assistant"}
         ]
-        packet = followup_graph.invoke(
-            {
-                "question_text": evaluation.question_text or "",
-                "solution_text": evaluation.solution_text or "",
-                "extracted_text": evaluation.extracted_text or "",
-                "score": evaluation.score,
-                "verdict": evaluation.verdict or "",
-                "result": evaluation.result or {},
-                "history": history[:-1],
-                "user_message": message,
-            }
-        )
+        with tracing_context(
+            user_id=str(user.id),
+            session_id=str(evaluation.id),
+            tags=["evaluation", "followup"],
+        ):
+            packet = traced_invoke(
+                followup_graph,
+                {
+                    "question_text": evaluation.question_text or "",
+                    "solution_text": evaluation.solution_text or "",
+                    "extracted_text": evaluation.extracted_text or "",
+                    "score": evaluation.score,
+                    "verdict": evaluation.verdict or "",
+                    "result": evaluation.result or {},
+                    "history": history[:-1],
+                    "user_message": message,
+                },
+                name="followup_graph",
+            )
         return packet["system_prompt"], packet["user_prompt"], evaluation
 
     def get(self, user: User, evaluation_id: UUID) -> Evaluation:

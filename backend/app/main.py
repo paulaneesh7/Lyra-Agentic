@@ -44,7 +44,14 @@ def create_app() -> FastAPI:
             seed_if_needed()
         except Exception:
             logger.exception("seed_failed")
+        if settings.langfuse_enabled:
+            logger.info("langfuse_tracing_enabled", host=settings.langfuse_base_url)
 
+    @app.on_event("shutdown")
+    def _shutdown() -> None:
+        from app.ai.tracing import flush_langfuse
+
+        flush_langfuse()
 
     @app.get("/health")
     def health() -> dict:
@@ -53,6 +60,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "app": current.app_name,
             "google_oauth": current.google_oauth_configured,
+            "langfuse": current.langfuse_enabled,
         }
 
     return app

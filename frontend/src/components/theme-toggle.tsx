@@ -22,7 +22,7 @@ export function ThemeToggle({
     return (
       <span
         className={cn(
-          "inline-flex h-8 w-8 shrink-0 rounded-lg",
+          "inline-flex h-8 w-8 shrink-0 rounded-md",
           variant === "outline" && "border border-[var(--line)] bg-[var(--bg-elevated)]",
           className,
         )}
@@ -69,7 +69,7 @@ export function ThemeToggle({
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={toggle}
       className={cn(
-        "relative inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg",
+        "relative inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md",
         "text-[var(--text-muted)] transition-colors duration-200",
         "hover:text-[var(--text)]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",

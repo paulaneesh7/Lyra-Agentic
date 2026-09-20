@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     app_url: str = "http://localhost:3000"
     api_url: str = "http://localhost:8000"
     secret_key: str = "dev-only-change-me"
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = 60 * 24  # 1 day
     refresh_token_expire_days: int = 14
 
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/gatepilot"
@@ -54,6 +54,11 @@ class Settings(BaseSettings):
     max_upload_mb: int = 8
     cors_origins: str = "http://localhost:3000"
 
+    # Langfuse — leave keys empty to disable tracing
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_base_url: str = "https://cloud.langfuse.com"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
@@ -61,6 +66,10 @@ class Settings(BaseSettings):
     @property
     def google_oauth_configured(self) -> bool:
         return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def langfuse_enabled(self) -> bool:
+        return bool(self.langfuse_public_key and self.langfuse_secret_key)
 
 
 @lru_cache

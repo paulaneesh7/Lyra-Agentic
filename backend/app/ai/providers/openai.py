@@ -6,6 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 from app.ai.providers.base import AIProvider
+from app.ai.tracing import langchain_config
 from app.core.config import settings
 
 
@@ -41,7 +42,8 @@ class OpenAIProvider(AIProvider):
             f"({schema_name}):\n{json.dumps(schema)}"
         )
         result = self.chat.invoke(
-            [SystemMessage(content=system), HumanMessage(content=prompt)]
+            [SystemMessage(content=system), HumanMessage(content=prompt)],
+            config=langchain_config(run_name=f"complete_json:{schema_name}"),
         )
         return _parse_json(str(result.content))
 
@@ -58,24 +60,27 @@ class OpenAIProvider(AIProvider):
             f"({schema_name}):\n{json.dumps(schema)}"
         )
         result = await self.chat.ainvoke(
-            [SystemMessage(content=system), HumanMessage(content=prompt)]
+            [SystemMessage(content=system), HumanMessage(content=prompt)],
+            config=langchain_config(run_name=f"acomplete_json:{schema_name}"),
         )
         return _parse_json(str(result.content))
 
     def complete_text(self, *, system: str, user: str) -> str:
         result = self.chat.invoke(
-            [SystemMessage(content=system), HumanMessage(content=user)]
+            [SystemMessage(content=system), HumanMessage(content=user)],
+            config=langchain_config(run_name="complete_text"),
         )
         return str(result.content)
 
     async def acomplete_text(self, *, system: str, user: str) -> str:
         result = await self.chat.ainvoke(
-            [SystemMessage(content=system), HumanMessage(content=user)]
+            [SystemMessage(content=system), HumanMessage(content=user)],
+            config=langchain_config(run_name="acomplete_text"),
         )
         return str(result.content)
 
     def stream_text(self, *, system: str, user: str) -> Iterator[str]:
-        yield from _stream_chat(self.chat, system, user)
+        yield from _stream_chat(self.chat, system, user, run_name="stream_text")
 
     def transcribe_images(self, image_bytes: list[bytes], hint: str = "") -> str:
         import base64
@@ -98,7 +103,10 @@ class OpenAIProvider(AIProvider):
                     "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
                 }
             )
-        result = self.vision.invoke([HumanMessage(content=parts)])
+        result = self.vision.invoke(
+            [HumanMessage(content=parts)],
+            config=langchain_config(run_name="transcribe_images"),
+        )
         return str(result.content)
 
 
@@ -127,18 +135,20 @@ class AzureOpenAIProvider(AIProvider):
             f"{json.dumps(schema)}"
         )
         result = self.chat.invoke(
-            [SystemMessage(content=system), HumanMessage(content=prompt)]
+            [SystemMessage(content=system), HumanMessage(content=prompt)],
+            config=langchain_config(run_name=f"complete_json:{schema_name}"),
         )
         return _parse_json(str(result.content))
 
     def complete_text(self, *, system: str, user: str) -> str:
         result = self.chat.invoke(
-            [SystemMessage(content=system), HumanMessage(content=user)]
+            [SystemMessage(content=system), HumanMessage(content=user)],
+            config=langchain_config(run_name="complete_text"),
         )
         return str(result.content)
 
     def stream_text(self, *, system: str, user: str) -> Iterator[str]:
-        yield from _stream_chat(self.chat, system, user)
+        yield from _stream_chat(self.chat, system, user, run_name="stream_text")
 
     def transcribe_images(self, image_bytes: list[bytes], hint: str = "") -> str:
         helper = OpenAIProvider.__new__(OpenAIProvider)
@@ -146,8 +156,20 @@ class AzureOpenAIProvider(AIProvider):
         return OpenAIProvider.transcribe_images(helper, image_bytes, hint)
 
 
-def _stream_chat(chat: Any, system: str, user: str) -> Iterator[str]:
-    for chunk in chat.stream([SystemMessage(content=system), HumanMessage(content=user)]):
+def _stream_chat(
+    chat: Any,
+    system: str,
+    user: str,
+    *,
+    run_name: str = "stream_text",
+) -> Iterator[str]:
+    config = langchain_config(run_name=run_name)
+    stream = (
+        chat.stream([SystemMessage(content=system), HumanMessage(content=user)], config=config)
+        if config
+        else chat.stream([SystemMessage(content=system), HumanMessage(content=user)])
+    )
+    for chunk in stream:
         content = getattr(chunk, "content", None)
         if isinstance(content, str) and content:
             yield content

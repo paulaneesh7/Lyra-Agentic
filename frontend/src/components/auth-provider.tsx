@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { api, cacheCredits, clearSession, getToken, setSession } from "@/lib/api";
+import { recoverGoogleAuthUi } from "@/lib/google-auth";
 
 export type User = {
   id: string;
@@ -52,6 +53,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined" && window.location.pathname.startsWith("/auth/callback")) {
       return;
     }
+
+    function onReturn() {
+      const params = new URLSearchParams(window.location.search);
+      // Login/signup already show their own failure toast for OAuth errors
+      if (params.get("error") === "google") {
+        recoverGoogleAuthUi({ announceCancel: false });
+        return;
+      }
+      recoverGoogleAuthUi({ announceCancel: true });
+    }
+
+    function onVisible() {
+      if (document.visibilityState === "visible") onReturn();
+    }
+
+    window.addEventListener("pageshow", onReturn);
+    document.addEventListener("visibilitychange", onVisible);
+    onReturn();
+
     void refresh().then(() => {
       if (typeof window === "undefined") return;
       if (sessionStorage.getItem("lyra.flash") === "signed-in") {
@@ -59,6 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.success("Signed in successfully");
       }
     });
+
+    return () => {
+      window.removeEventListener("pageshow", onReturn);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [refresh]);
 
   const completeSession = useCallback(async (access: string) => {

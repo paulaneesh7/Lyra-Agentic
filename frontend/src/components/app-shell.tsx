@@ -376,7 +376,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
     >
       <div className={cn("shrink-0 border-b border-[var(--line)]/70 px-4 py-4", compact && "flex justify-center px-2")}>
-        <Logo compact={compact} />
+        <Logo compact={compact} subtitle="Workspace" />
       </div>
       {compact && !forMobile ? collapseButton(true) : null}
       {nav(compact)}
