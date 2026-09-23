@@ -3,6 +3,7 @@
 import { History, Plus } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { FlashJobBanner } from "@/components/flashcards/job-banner";
 import { HistoryRail } from "@/components/flashcards/history-rail";
 import { MobileDrawer } from "@/components/ui/mobile-drawer";
 import type { useFlashStudio } from "@/components/flashcards/use-flash-decks";
@@ -58,6 +59,7 @@ export function FlashLayout({
             <Plus size={12} /> New
           </Link>
         </div>
+        <FlashJobBanner />
         <div className="relative min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
       <MobileDrawer open={mobileOpen} onClose={closeMobile} title="Deck history" side="left" breakpoint="lg">

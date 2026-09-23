@@ -3,7 +3,9 @@
 import { History, PanelLeftClose, PanelLeftOpen, Pin, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useFlashJob } from "@/components/flashcards/use-flash-job";
 import { ago, type FlashDeck, HISTORY_KEY } from "@/lib/flashcards";
+import { flashJobLabel, takeReadyDeck } from "@/lib/flash-job";
 import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +37,8 @@ export function HistoryRail({
   variant?: "rail" | "sheet";
 }) {
   const router = useRouter();
+  const job = useFlashJob();
+  const jobLabel = flashJobLabel(job);
   const dueTotal = decks.reduce((n, d) => n + (d.due_count || 0), 0);
   const q = query.trim().toLowerCase();
   const filtered = decks.filter((d) => {
@@ -110,6 +114,23 @@ export function HistoryRail({
             </p>
           </div>
           <div className="mt-1 min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            {job.status === "running" ? (
+              <div className="mb-1 flex min-w-0 items-center gap-2 rounded-md bg-[var(--accent-soft)] px-3 py-2.5 text-[var(--accent)]" role="status">
+                <Loader size="sm" className="shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{jobLabel}</span>
+              </div>
+            ) : job.status === "ready" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const deck = takeReadyDeck();
+                  if (deck) router.push(`/flashcards/${deck.id}`);
+                }}
+                className="mb-1 flex w-full min-w-0 items-center gap-2 rounded-md bg-[var(--accent-soft)] px-3 py-2.5 text-left text-sm font-medium text-[var(--accent)]"
+              >
+                <span className="min-w-0 flex-1 truncate">{jobLabel}</span>
+              </button>
+            ) : null}
             {filtered.length === 0 ? (
               loading ? (
                 <div className="grid place-items-center py-16">
@@ -186,6 +207,16 @@ export function HistoryRail({
           >
             <Plus size={16} />
           </Link>
+          {job.status === "running" ? (
+            <Link
+              href="/flashcards"
+              prefetch
+              className="grid h-9 w-9 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]"
+              aria-label={jobLabel}
+            >
+              <Loader size="sm" />
+            </Link>
+          ) : null}
           <History size={16} className="mt-1 text-[var(--text-muted)]" />
         </div>
       )}

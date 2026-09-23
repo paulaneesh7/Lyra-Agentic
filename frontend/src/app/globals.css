@@ -137,9 +137,14 @@ a[aria-disabled="true"] {
   height: 20px;
   flex-shrink: 0;
   border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
-  border-top-color: var(--text-muted);
+  border: 2px solid color-mix(in srgb, currentColor 32%, transparent);
+  border-top-color: currentColor;
   animation: lyra-spin 0.65s linear infinite;
+}
+
+/* A loading button should stay at full contrast so the spinner stays readable. */
+button:disabled:has(.lyra-loader) {
+  opacity: 1;
 }
 
 .lyra-loader-sm {

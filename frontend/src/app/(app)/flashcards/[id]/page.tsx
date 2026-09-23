@@ -29,11 +29,12 @@ export default function FlashDeckPage() {
 
   async function remove() {
     if (!params.id) return;
-    removeFlashDeck(params.id);
+    const id = params.id;
+    removeFlashDeck(id);
+    toast.success("Deck removed");
     router.replace("/flashcards");
     try {
-      await api(`/api/flashcards/decks/${params.id}`, { method: "DELETE" });
-      toast.success("Deck removed");
+      await api(`/api/flashcards/decks/${id}`, { method: "DELETE" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not delete deck");
       void api<FlashDeck[]>("/api/flashcards/decks").then((d) => flash.setDecks(d));

@@ -196,7 +196,7 @@ export default function EvaluationPage() {
       type="button"
       disabled={busy || !canRun}
       onClick={() => void run().catch((e) => toast.error(e instanceof Error ? e.message : "Evaluation failed"))}
-      className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--accent)] text-sm font-medium text-white shadow-[0_10px_24px_var(--ring)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--accent)] text-sm font-medium text-[var(--accent-text)] shadow-[0_10px_24px_var(--ring)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {busy ? (
         <>
