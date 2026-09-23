@@ -13,7 +13,10 @@ export function FlashJobNotifier() {
   const announced = useRef<string | null>(null);
 
   useEffect(() => {
-    if (job.status !== "ready") return;
+    if (job.status !== "ready") {
+      announced.current = null;
+      return;
+    }
     const deck = job.deck;
     if (announced.current === deck.id) return;
     announced.current = deck.id;
@@ -25,8 +28,8 @@ export function FlashJobNotifier() {
       action: {
         label: "View deck",
         onClick: () => {
-          takeReadyDeck();
-          router.push(`/flashcards/${deck.id}`);
+          const opened = takeReadyDeck();
+          if (opened?.id === deck.id) router.push(`/flashcards/${deck.id}`);
         },
       },
     });

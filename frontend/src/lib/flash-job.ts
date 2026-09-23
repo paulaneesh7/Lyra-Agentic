@@ -1,7 +1,8 @@
 "use client";
 
 import { toast } from "sonner";
-import { api, cacheCredits } from "@/lib/api";
+import { onAuthSession } from "@/lib/auth-session";
+import { api, cacheCredits, getToken } from "@/lib/api";
 import { upsertFlashDeck } from "@/lib/flash-store";
 import type { FlashDeck } from "@/lib/flashcards";
 
@@ -40,6 +41,9 @@ const IDLE: FlashJob = { status: "idle" };
 
 let job: FlashJob = IDLE;
 let timer: number | null = null;
+let epoch = 0;
+let jobToken: string | null = null;
+let toastDeckId: string | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -52,6 +56,31 @@ function stopTimer() {
     timer = null;
   }
 }
+
+function dismissReadyToast() {
+  if (!toastDeckId) return;
+  toast.dismiss(`flash-ready-${toastDeckId}`);
+  toastDeckId = null;
+}
+
+/** Forget an in-flight or finished deck when it no longer belongs to the signed-in session. */
+function resetJob() {
+  epoch += 1;
+  stopTimer();
+  dismissReadyToast();
+  if (job.status === "idle") return;
+  job = IDLE;
+  emit();
+}
+
+function adoptSession(token: string | null) {
+  if (token === jobToken) return;
+  jobToken = token;
+  resetJob();
+}
+
+adoptSession(typeof window === "undefined" ? null : getToken());
+onAuthSession(adoptSession);
 
 /** Lives outside the page so leaving Flashcards does not drop an in-flight deck. */
 export function getFlashJob() {
@@ -77,20 +106,28 @@ export function flashJobLabel(current: FlashJob = job) {
 }
 
 export function startFlashJob(input: FlashGenerateInput) {
+  const token = getToken();
+  if (!token || token !== jobToken) return false;
   if (job.status === "running") return false;
   stopTimer();
+  dismissReadyToast();
+  const ticket = epoch;
   job = { status: "running", step: 0, topic: input.topic_name };
   emit();
   timer = window.setInterval(() => {
-    if (job.status !== "running") return;
+    if (ticket !== epoch || job.status !== "running") return;
     job = { status: "running", step: (job.step + 1) % GENERATE_STEPS.length, topic: job.topic };
     emit();
   }, 1400);
-  void runFlashJob(input);
+  void runFlashJob(input, ticket, token);
   return true;
 }
 
-async function runFlashJob(input: FlashGenerateInput) {
+function stillOwnsJob(ticket: number, token: string, topic: string) {
+  return ticket === epoch && jobToken === token && getToken() === token && job.status === "running" && job.topic === topic;
+}
+
+async function runFlashJob(input: FlashGenerateInput, ticket: number, token: string) {
   const topic = input.topic_name;
   try {
     const deck = await api<FlashDeck>("/api/flashcards/generate", {
@@ -98,14 +135,15 @@ async function runFlashJob(input: FlashGenerateInput) {
       timeoutMs: 90_000,
       body: JSON.stringify(input),
     });
-    if (job.status !== "running" || job.topic !== topic) return;
+    if (!stillOwnsJob(ticket, token, topic)) return;
     if (typeof deck.credits_left === "number") cacheCredits(deck.credits_left);
-    upsertFlashDeck(deck);
+    upsertFlashDeck(deck, token);
     stopTimer();
+    toastDeckId = deck.id;
     job = { status: "ready", deck };
     emit();
   } catch (e) {
-    if (job.status !== "running" || job.topic !== topic) return;
+    if (!stillOwnsJob(ticket, token, topic)) return;
     stopTimer();
     job = IDLE;
     emit();
