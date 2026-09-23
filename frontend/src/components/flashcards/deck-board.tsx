@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { api, getToken } from "@/lib/api";
 import { applyRating } from "@/lib/flash-store";
 import { PASTELS, type FlashCard, type FlashDeck } from "@/lib/flashcards";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,8 @@ export function DeckBoard({
   const known = deck.known_count ?? deck.cards.filter((c) => c.known).length;
   const pct = Math.round((100 * known) / Math.max(1, deck.card_count));
 
-  function patchCard(updated: FlashCard) {
+  function patchCard(updated: FlashCard, owner: string | null = getToken()) {
+    if (!owner || getToken() !== owner) return;
     const cards = deck.cards.map((c) => (c.id === updated.id ? { ...c, ...updated } : c));
     const knownCount = cards.filter((c) => c.known).length;
     const dueCount = cards.filter((c) => c.status === "due").length;
@@ -72,29 +73,33 @@ export function DeckBoard({
   }
 
   async function flag(item: FlashCard, partial: Partial<Pick<FlashCard, "bookmarked" | "known" | "marked_difficult">>) {
-    patchCard({ ...item, ...partial });
+    const owner = getToken();
+    patchCard({ ...item, ...partial }, owner);
     try {
       const updated = await api<FlashCard>(`/api/flashcards/${item.id}/flags`, {
         method: "POST",
         body: JSON.stringify(partial),
       });
-      patchCard(updated);
+      patchCard(updated, owner);
     } catch (e) {
-      patchCard(item);
+      patchCard(item, owner);
+      if (getToken() !== owner) return;
       toast.error(e instanceof Error ? e.message : "Could not update card");
     }
   }
 
   async function rate(item: FlashCard, rating: "again" | "hard" | "good" | "easy") {
-    patchCard(applyRating(item, rating));
+    const owner = getToken();
+    patchCard(applyRating(item, rating), owner);
     try {
       const updated = await api<FlashCard>(`/api/flashcards/${item.id}/review`, {
         method: "POST",
         body: JSON.stringify({ rating }),
       });
-      patchCard(updated);
+      patchCard(updated, owner);
     } catch (e) {
-      patchCard(item);
+      patchCard(item, owner);
+      if (getToken() !== owner) return;
       toast.error(e instanceof Error ? e.message : "Could not save review");
     }
   }
@@ -105,6 +110,7 @@ export function DeckBoard({
       toast.error("Question and answer both need text.");
       return;
     }
+    const owner = getToken();
     setSaving(true);
     try {
       const updated = await api<FlashCard>(`/api/flashcards/${card.id}`, {
@@ -115,10 +121,12 @@ export function DeckBoard({
           explanation: draft.explanation.trim(),
         }),
       });
-      patchCard(updated);
+      patchCard(updated, owner);
+      if (getToken() !== owner) return;
       setOverlay({ id: card.id, mode: "view" });
       toast.success("Card updated");
     } catch (e) {
+      if (getToken() !== owner) return;
       toast.error(e instanceof Error ? e.message : "Could not save card");
     } finally {
       setSaving(false);

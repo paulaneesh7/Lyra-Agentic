@@ -2,15 +2,15 @@
 
 import { ArrowRight, Layers, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
+import { useFlashJob } from "@/components/flashcards/use-flash-job";
 import { Loader } from "@/components/ui/loader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { api, cacheCredits, peekCredits } from "@/lib/api";
-import { upsertFlashDeck } from "@/lib/flash-store";
-import type { FlashDeck } from "@/lib/flashcards";
+import { peekCredits } from "@/lib/api";
+import { flashJobLabel, startFlashJob, takeReadyDeck } from "@/lib/flash-job";
 import {
   CARD_FORMATS,
   EXAM_WEIGHTS,
@@ -22,13 +22,6 @@ import {
   type GateSubject,
 } from "@/lib/gate-syllabus";
 import { cn } from "@/lib/utils";
-
-const STEPS = [
-  "Mapping the GATE syllabus…",
-  "Writing atomic cards…",
-  "Adding traps and complexity…",
-  "Packing your revision deck…",
-];
 
 function Toggle({
   on,
@@ -78,14 +71,20 @@ export default function FlashcardsGeneratePage() {
   const [includeMnemonics, setIncludeMnemonics] = useState(false);
   const [includeCompare, setIncludeCompare] = useState(true);
   const [showExtraFocus, setShowExtraFocus] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [step, setStep] = useState(0);
+  const job = useFlashJob();
+  const generating = job.status === "running";
+  const watching = useRef(false);
 
   useEffect(() => {
-    if (!busy) return;
-    const id = window.setInterval(() => setStep((s) => (s + 1) % STEPS.length), 1400);
-    return () => window.clearInterval(id);
-  }, [busy]);
+    if (job.status === "running") {
+      watching.current = true;
+      return;
+    }
+    if (job.status !== "ready" || !watching.current) return;
+    watching.current = false;
+    const deck = takeReadyDeck();
+    if (deck) router.push(`/flashcards/${deck.id}`);
+  }, [job, router]);
 
   const unitName = customUnit.trim() || unit;
   const suggested = useMemo(() => {
@@ -133,50 +132,35 @@ export default function FlashcardsGeneratePage() {
     toast.message("Exam-week pack loaded");
   }
 
-  async function generate() {
+  function generate() {
     if (!topic.trim()) {
       toast.error("Add a GATE topic so the cards stay focused.");
       return;
     }
-    setBusy(true);
-    setStep(0);
-    try {
-      const deck = await api<FlashDeck>("/api/flashcards/generate", {
-        method: "POST",
-        timeoutMs: 90_000,
-        body: JSON.stringify({
-          paper_code: paperId,
-          subject_name: subject.name,
-          unit_name: unitName,
-          topic_name: topic.trim(),
-          count,
-          focus,
-          notes,
-          difficulty,
-          include_complexity: includeComplexity,
-          include_traps: includeTraps,
-          include_nat: includeNat,
-          include_mnemonics: includeMnemonics,
-          include_compare: includeCompare,
-          exam_weight: examWeight,
-          card_format: cardFormat,
-          title: topic.trim(),
-        }),
-      });
-      if (typeof deck.credits_left === "number") cacheCredits(deck.credits_left);
-      toast.success(`${deck.card_count} cards ready · ${topic.trim()}`);
-      upsertFlashDeck(deck);
-      router.push(`/flashcards/${deck.id}`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not generate cards");
-    } finally {
-      setBusy(false);
-    }
+    const started = startFlashJob({
+      paper_code: paperId,
+      subject_name: subject.name,
+      unit_name: unitName,
+      topic_name: topic.trim(),
+      count,
+      focus,
+      notes,
+      difficulty,
+      include_complexity: includeComplexity,
+      include_traps: includeTraps,
+      include_nat: includeNat,
+      include_mnemonics: includeMnemonics,
+      include_compare: includeCompare,
+      exam_weight: examWeight,
+      card_format: cardFormat,
+      title: topic.trim(),
+    });
+    if (started) watching.current = true;
   }
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <div className="h-full overflow-y-auto overscroll-contain px-4 pb-16 pt-4 md:px-8 lg:px-10 [scrollbar-gutter:stable]">
+      <div className="h-full overflow-y-auto overscroll-contain px-4 pb-24 pt-4 sm:px-6 md:px-8 lg:px-10 [scrollbar-gutter:stable]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Revision studio</p>
@@ -441,15 +425,22 @@ export default function FlashcardsGeneratePage() {
         </div>
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 flex h-14 items-center gap-3 border-t border-[var(--line)] bg-[var(--bg)] px-4 md:px-8">
-        <Button className="mx-auto h-9 w-full max-w-3xl text-sm sm:mx-0 sm:flex-1" disabled={busy} onClick={() => void generate()}>
-          {busy ? (
+      <div className="absolute inset-x-0 bottom-0 z-10 flex items-center gap-2 border-t border-[var(--line)] bg-[var(--bg)] px-3 py-2 sm:gap-3 sm:px-4 md:px-8">
+        <Button
+          className="mx-auto h-auto min-h-9 w-full min-w-0 max-w-3xl py-2 text-sm sm:mx-0 sm:flex-1"
+          disabled={generating}
+          onClick={generate}
+        >
+          {generating ? (
             <>
-              <Loader size="sm" /> {STEPS[step]}
+              <Loader size="sm" className="shrink-0" />
+              <span className="min-w-0 whitespace-normal text-center leading-tight">{flashJobLabel(job)}</span>
             </>
           ) : (
             <>
-              <WandSparkles size={15} /> Generate {count} flashcards <ArrowRight size={15} />
+              <WandSparkles size={15} className="shrink-0" />
+              <span className="min-w-0 truncate">Generate {count} flashcards</span>
+              <ArrowRight size={15} className="shrink-0" />
             </>
           )}
         </Button>

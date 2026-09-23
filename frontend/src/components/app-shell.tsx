@@ -16,6 +16,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/components/auth-provider";
+import { FlashJobNotifier } from "@/components/flashcards/job-notifier";
 import { Loader } from "@/components/ui/loader";
 import { MobileDrawer } from "@/components/ui/mobile-drawer";
 import { Logo } from "@/components/logo";
@@ -395,6 +396,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         collapsed ? "lg:grid-cols-[72px_minmax(0,1fr)]" : "lg:grid-cols-[260px_minmax(0,1fr)]",
       )}
     >
+      <FlashJobNotifier />
       <div className="sticky top-0 z-20 hidden h-dvh min-h-0 overflow-clip border-r border-[var(--line)] bg-[var(--bg-sidebar)] lg:block">
         {sidebar(collapsed)}
       </div>

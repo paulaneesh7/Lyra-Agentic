@@ -1,3 +1,4 @@
+import { notifyAuthSession } from "@/lib/auth-session";
 import { apiUrl } from "@/lib/brand";
 
 const TOKEN_KEY = "lyra.access";
@@ -56,14 +57,18 @@ export function getToken() {
 }
 
 export function setSession(access: string) {
+  const previous = getToken();
   localStorage.setItem(TOKEN_KEY, access);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
+  if (previous !== access) notifyAuthSession(access);
 }
 
 export function clearSession() {
+  const previous = getToken();
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
   localStorage.removeItem(CREDITS_KEY);
+  if (previous) notifyAuthSession(null);
 }
 
 export function peekCredits(): number | null {

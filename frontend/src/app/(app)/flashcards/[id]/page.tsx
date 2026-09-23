@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { DeckBoard } from "@/components/flashcards/deck-board";
 import { useFlashStudio } from "@/components/flashcards/use-flash-decks";
 import { ScreenLoader } from "@/components/ui/loader";
-import { api } from "@/lib/api";
-import { removeFlashDeck, upsertFlashDeck } from "@/lib/flash-store";
+import { api, getToken } from "@/lib/api";
+import { getFlashDecks, removeFlashDeck, upsertFlashDeck } from "@/lib/flash-store";
 import type { FlashDeck } from "@/lib/flashcards";
 
 export default function FlashDeckPage() {
@@ -15,28 +15,46 @@ export default function FlashDeckPage() {
   const router = useRouter();
   const flash = useFlashStudio();
   const cached = flash.decks.find((d) => d.id === params.id) ?? null;
-  const [missing, setMissing] = useState(false);
+  const [missingId, setMissingId] = useState<string | null>(null);
+  const missing = missingId === params.id && !cached;
 
   useEffect(() => {
-    if (!params.id) return;
-    setMissing(false);
-    api<FlashDeck>(`/api/flashcards/decks/${params.id}`)
-      .then(upsertFlashDeck)
+    const id = params.id;
+    if (!id) return;
+    const owner = getToken();
+    const sawCache = getFlashDecks().some((deck) => deck.id === id);
+    let cancelled = false;
+    api<FlashDeck>(`/api/flashcards/decks/${id}`)
+      .then((deck) => {
+        if (cancelled || getToken() !== owner) return;
+        upsertFlashDeck(deck, owner);
+        setMissingId((current) => (current === id ? null : current));
+      })
       .catch(() => {
-        if (!cached) setMissing(true);
+        if (cancelled || getToken() !== owner) return;
+        if (!sawCache) setMissingId(id);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [params.id]);
 
   async function remove() {
     if (!params.id) return;
-    removeFlashDeck(params.id);
+    const id = params.id;
+    removeFlashDeck(id);
+    toast.success("Deck removed");
     router.replace("/flashcards");
+    const owner = getToken();
     try {
-      await api(`/api/flashcards/decks/${params.id}`, { method: "DELETE" });
-      toast.success("Deck removed");
+      await api(`/api/flashcards/decks/${id}`, { method: "DELETE" });
     } catch (e) {
+      if (getToken() !== owner) return;
       toast.error(e instanceof Error ? e.message : "Could not delete deck");
-      void api<FlashDeck[]>("/api/flashcards/decks").then((d) => flash.setDecks(d));
+      void api<FlashDeck[]>("/api/flashcards/decks").then((d) => {
+        if (getToken() !== owner) return;
+        flash.setDecks(d, owner);
+      });
     }
   }
 
