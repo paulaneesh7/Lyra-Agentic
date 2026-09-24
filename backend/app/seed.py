@@ -230,7 +230,7 @@ def _seed(db: Session) -> None:
         [
             PurchasePlan(code="starter", name="Starter", price_inr=99, credits=100, badge=None),
             PurchasePlan(code="popular", name="Focus", price_inr=499, credits=550, badge="Most used"),
-            PurchasePlan(code="pro", name="Intensive", price_inr=999, credits=1150, badge="Best value"),
+            PurchasePlan(code="pro", name="Intensive", price_inr=999, credits=1200, badge="Best value"),
         ]
     )
 

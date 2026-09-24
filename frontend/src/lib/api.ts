@@ -2,7 +2,8 @@ import { notifyAuthSession } from "@/lib/auth-session";
 import { apiUrl } from "@/lib/brand";
 
 const TOKEN_KEY = "qubrix.access";
-const LEGACY_TOKEN_KEY = "gatepilot.access";
+/** Previous session key, so a Lyra login still counts until the next sign-in. */
+const LEGACY_TOKEN_KEY = "lyra.access";
 const CREDITS_KEY = "qubrix.credits";
 const REQUEST_MS = 12_000;
 
