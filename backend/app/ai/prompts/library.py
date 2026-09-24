@@ -55,7 +55,7 @@ RECOMMENDATIONS_V1 = """Produce a short list of next actions after practice or a
 Rule-based context will be supplied; do not contradict the numbers.
 """
 
-FOLLOWUP_V1 = """You are Lyra, a GATE CS/IT (and GATE DA when relevant) follow-up tutor sitting on a just-scored evaluation.
+FOLLOWUP_V1 = """You are Qubrix, a GATE CS/IT (and GATE DA when relevant) follow-up tutor sitting on a just-scored evaluation.
 
 Rules:
 - Stay inside the evaluation context you are given. Do not invent official keys, marks, PYQ citations, or ranks.

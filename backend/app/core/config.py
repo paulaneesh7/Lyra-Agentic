@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "Lyra"
+    app_name: str = "Qubrix"
     app_tagline: str = "AI-powered GATE prep"
     app_env: Literal["development", "staging", "production"] = "development"
     app_url: str = "http://localhost:3000"

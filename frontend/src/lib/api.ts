@@ -1,9 +1,9 @@
 import { notifyAuthSession } from "@/lib/auth-session";
 import { apiUrl } from "@/lib/brand";
 
-const TOKEN_KEY = "lyra.access";
+const TOKEN_KEY = "qubrix.access";
 const LEGACY_TOKEN_KEY = "gatepilot.access";
-const CREDITS_KEY = "lyra.credits";
+const CREDITS_KEY = "qubrix.credits";
 const REQUEST_MS = 12_000;
 
 let handlingSessionExpiry = false;
@@ -33,7 +33,7 @@ function handleSessionExpired(message?: string): boolean {
   clearSession();
   try {
     sessionStorage.setItem(
-      "lyra.flash",
+      "qubrix.flash",
       JSON.stringify({
         type: "session-expired",
         message: message?.trim() || "Session expired. Please sign in again.",
@@ -82,7 +82,7 @@ export function peekCredits(): number | null {
 export function cacheCredits(balance: number) {
   if (typeof window === "undefined") return;
   localStorage.setItem(CREDITS_KEY, String(balance));
-  window.dispatchEvent(new CustomEvent("lyra-credits", { detail: balance }));
+  window.dispatchEvent(new CustomEvent("qubrix-credits", { detail: balance }));
 }
 
 export class ApiError extends Error {

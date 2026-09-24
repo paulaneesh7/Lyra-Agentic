@@ -29,8 +29,8 @@ export type FlashDeck = {
   credits_left?: number;
 };
 
-export const HISTORY_KEY = "lyra.flash.historyOpen";
-export const PINS_KEY = "lyra.flash.pins";
+export const HISTORY_KEY = "qubrix.flash.historyOpen";
+export const PINS_KEY = "qubrix.flash.pins";
 
 export const PASTELS = [
   "bg-[#FFF59D] text-[#3d3208]",

@@ -1,11 +1,11 @@
-# Lyra
+# Qubrix
 
 **AI-powered GATE preparation** — evaluate handwritten and typed answers, get structured feedback, revise with spaced flashcards, and track progress in one loop.
 
-Lyra starts with **GATE CS / IT** and is built on an exam-agnostic core so additional papers (EE, ME, DA) and exams can be added without rewriting the product.
+Qubrix starts with **GATE CS / IT** and is built on an exam-agnostic core so additional papers (EE, ME, DA) and exams can be added without rewriting the product.
 
 <p align="center">
-  <img src="docs/architecture/lyra-system-architecture.png" alt="Lyra system architecture" width="920" />
+  <img src="docs/architecture/qubrix-system-architecture.png" alt="Qubrix system architecture" width="920" />
 </p>
 
 <p align="center">
@@ -16,9 +16,9 @@ Lyra starts with **GATE CS / IT** and is built on an exam-agnostic core so addit
 
 ## Overview
 
-Lyra helps aspirants close the gap between “I wrote an answer” and “I know exactly what to fix.”
+Qubrix helps aspirants close the gap between “I wrote an answer” and “I know exactly what to fix.”
 
-| Loop stage | What Lyra does |
+| Loop stage | What Qubrix does |
 |---|---|
 | **Submit** | Paste text or upload answer photos (OCR via vision LLM / Azure DI) |
 | **Evaluate** | LangGraph pipeline scores, explains gaps, and returns structured feedback |
@@ -54,7 +54,7 @@ Credits power AI actions today via an in-app wallet and ledger. **Real payment g
 
 ## System design
 
-The diagram above summarizes the production shape of Lyra.
+The diagram above summarizes the production shape of Qubrix.
 
 1. **Student** submits a GATE answer (text and/or images) from the Next.js evaluation workspace.
 2. **FastAPI** authenticates the user, reserves credits, stores uploads, and runs OCR when needed.
@@ -112,9 +112,9 @@ copy .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-On startup Lyra creates tables and seeds GATE CS syllabus data, credit costs, and purchase plans.
+On startup Qubrix creates tables and seeds GATE CS syllabus data, credit costs, and purchase plans.
 
-**Seeded admin (local):** `admin@lyra.ai` / `ChangeMeAdmin!23`  
+**Seeded admin (local):** `admin@qubrix.ai` / `ChangeMeAdmin!23`  
 Change this password before any shared or production use.
 
 ### 2. Frontend
@@ -227,5 +227,5 @@ Private / unlicensed unless otherwise stated by the repository owner.
 ---
 
 <p align="center">
-  <strong>Lyra</strong> — write better GATE answers, one evaluation at a time.
+  <strong>Qubrix</strong> — write better GATE answers, one evaluation at a time.
 </p>

@@ -32,7 +32,7 @@ const NAV = [
   { href: "/credits", label: "Credits", hint: "Wallet and top-ups", icon: Wallet, tone: "accent" as const },
 ];
 
-const COLLAPSE_KEY = "lyra.sidebar.collapsed";
+const COLLAPSE_KEY = "qubrix.sidebar.collapsed";
 
 const TITLES: Record<string, string> = {
   "/dashboard": "Overview",
@@ -97,8 +97,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const detail = (event as CustomEvent<number>).detail;
       if (typeof detail === "number") setCredits(detail);
     }
-    window.addEventListener("lyra-credits", onCredits);
-    return () => window.removeEventListener("lyra-credits", onCredits);
+    window.addEventListener("qubrix-credits", onCredits);
+    return () => window.removeEventListener("qubrix-credits", onCredits);
   }, []);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     Object.entries(TITLES)
       .sort(([a], [b]) => b.length - a.length)
       .find(([href]) => pathname === href || (href !== "/dashboard" && pathname.startsWith(href)))?.[1] ??
-    "Lyra";
+    "Qubrix";
 
   const menu =
     menuOpen && typeof document !== "undefined"
@@ -236,7 +236,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   const nav = (compact: boolean) => (
-    <nav className="lyra-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-2.5">
+    <nav className="qubrix-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-2.5">
       {!compact && (
         <p className="px-2.5 pb-2.5 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
           Modules
@@ -414,14 +414,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-3 py-2.5 backdrop-blur lg:hidden">
           <button
             type="button"
-            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-[var(--line)] bg-[var(--bg-elevated)]"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation"
           >
             <Menu size={18} />
           </button>
-          <p className="text-sm font-semibold tracking-tight">{pageTitle}</p>
-          <div className="flex h-9 items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-1.5">
+          <p className="min-w-0 flex-1 truncate px-2 text-center text-sm font-semibold tracking-tight">{pageTitle}</p>
+          <div className="flex h-9 shrink-0 items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-1.5">
             <ThemeToggle variant="ghost" />
             <button
               ref={mobileAvatarRef}

@@ -9,7 +9,7 @@ export function Loader({
 }) {
   return (
     <span
-      className={cn("lyra-loader", size === "sm" && "lyra-loader-sm", className)}
+      className={cn("qubrix-loader", size === "sm" && "qubrix-loader-sm", className)}
       role="status"
       aria-label="Loading"
     />

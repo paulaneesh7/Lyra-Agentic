@@ -28,9 +28,9 @@ export const CHAT_MIN = 260;
 export const CHAT_MAX = 420;
 export const CHAT_DEFAULT = 292;
 export const FOLLOW_UP_LIMIT = 5;
-const WIDTH_KEY = "lyra.eval.chatWidth";
-const PINS_KEY = "lyra.eval.pins";
-const HISTORY_KEY = "lyra.eval.historyOpen";
+const WIDTH_KEY = "qubrix.eval.chatWidth";
+const PINS_KEY = "qubrix.eval.pins";
+const HISTORY_KEY = "qubrix.eval.historyOpen";
 const HINTS = ["Why is this wrong?", "Better approach", "GATE trap", "Complexity"];
 
 export type EvalHistoryItem = {
@@ -231,7 +231,7 @@ export function EvalWorkspace({
           />
         </div>
       </div>
-      <div className="lyra-sidebar-scroll mt-2 min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+      <div className="qubrix-sidebar-scroll mt-2 min-h-0 flex-1 overflow-y-auto px-2 pb-3">
         {filtered.length === 0 ? (
           historyLoading ? (
             <div className="grid place-items-center py-16">
@@ -304,7 +304,7 @@ export function EvalWorkspace({
   );
 
   const chatLog = (
-    <div data-follow-log className="lyra-chat-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4">
+    <div data-follow-log className="qubrix-chat-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4">
       {chat.length === 0 && !thinking ? (
         <div className="grid h-full place-items-center px-3 text-center">
           <div className="max-w-[220px]">
@@ -319,7 +319,7 @@ export function EvalWorkspace({
               {chatEnabled ? <MessageCircle size={22} /> : <Lock size={18} />}
             </div>
             <p className="text-sm font-semibold tracking-tight">
-              {chatEnabled ? "Ask Lyra about this mark" : "Follow-ups locked"}
+              {chatEnabled ? "Ask Qubrix about this mark" : "Follow-ups locked"}
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-muted)]">
               {chatEnabled
@@ -349,7 +349,7 @@ export function EvalWorkspace({
             >
               {line.role !== "user" ? (
                 <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[10px] font-semibold text-[var(--accent)]">
-                  L
+                  Q
                 </span>
               ) : null}
               <div
@@ -365,7 +365,7 @@ export function EvalWorkspace({
                 ) : (
                   <>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                      Lyra
+                      Qubrix
                     </p>
                     <p className="whitespace-pre-wrap">{line.content}</p>
                   </>
@@ -376,10 +376,10 @@ export function EvalWorkspace({
           {thinking ? (
             <div className="flex gap-2">
               <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[10px] font-semibold text-[var(--accent)]">
-                L
+                Q
               </span>
               <div className="inline-flex items-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-sm">
-                <span className="lyra-typing" aria-hidden>
+                <span className="qubrix-typing" aria-hidden>
                   <i />
                   <i />
                   <i />
@@ -536,7 +536,7 @@ export function EvalWorkspace({
           type="button"
           aria-label="Drag to resize follow-up chat"
           onPointerDown={startDrag}
-          className="lyra-resize-grip absolute top-1/2 -left-2.5 z-30 flex -translate-y-1/2 cursor-col-resize items-center justify-center text-[var(--text-muted)]"
+          className="qubrix-resize-grip absolute top-1/2 -left-2.5 z-30 flex -translate-y-1/2 cursor-col-resize items-center justify-center text-[var(--text-muted)]"
         >
           <GripVertical size={14} />
         </button>

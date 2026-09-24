@@ -74,8 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     void refresh().then(() => {
       if (typeof window === "undefined") return;
-      if (sessionStorage.getItem("lyra.flash") === "signed-in") {
-        sessionStorage.removeItem("lyra.flash");
+      if (sessionStorage.getItem("qubrix.flash") === "signed-in") {
+        sessionStorage.removeItem("qubrix.flash");
         toast.success("Signed in successfully");
       }
     });

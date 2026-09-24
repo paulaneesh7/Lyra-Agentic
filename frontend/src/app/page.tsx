@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Check,
+  Flame,
   Layers,
   Menu,
   MessageCircle,
   Minus,
+  PenLine,
   Sparkles,
+  Target,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -57,9 +60,39 @@ const COMPARE = [
 ];
 
 const PLANS = [
-  { name: "Starter", price: 99, credits: 100, evals: 10, decks: 20, badge: null, highlight: false },
-  { name: "Focus", price: 499, credits: 550, evals: 55, decks: 110, badge: "Most used", highlight: true },
-  { name: "Intensive", price: 999, credits: 1200, evals: 120, decks: 240, badge: "Best value", highlight: false },
+  {
+    name: "Starter",
+    price: 99,
+    credits: 100,
+    evals: 10,
+    decks: 20,
+    badge: "First papers",
+    hint: "A few scored answers to see the rubric.",
+    icon: PenLine,
+    tone: "muted" as const,
+  },
+  {
+    name: "Focus",
+    price: 499,
+    credits: 550,
+    evals: 55,
+    decks: 110,
+    badge: "Most used",
+    hint: "Enough credits for a steady weekly loop.",
+    icon: Target,
+    tone: "accent" as const,
+  },
+  {
+    name: "Intensive",
+    price: 999,
+    credits: 1200,
+    evals: 120,
+    decks: 240,
+    badge: "Best value",
+    hint: "A full revision block before the exam.",
+    icon: Flame,
+    tone: "warm" as const,
+  },
 ];
 
 const NAV_LINKS = [
@@ -100,10 +133,10 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
+    <div className="min-h-screen overflow-x-clip bg-[var(--bg)]">
       <header className="sticky top-0 z-50 border-b border-[var(--line)]/80 bg-[var(--bg)]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-5">
-          <Logo hideSubtitleOnMobile />
+          <Logo hideSubtitleOnMobile className="min-w-0 shrink" />
           <nav className="hidden items-center gap-1 text-sm text-[var(--text-muted)] md:flex">
             {NAV_LINKS.map((item) => (
               <a
@@ -211,9 +244,9 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="lyra-grid pointer-events-none absolute inset-0" />
-        <div className="lyra-orb pointer-events-none absolute -top-28 right-[-5rem] h-72 w-72 rounded-full bg-[var(--accent)]/16 blur-3xl" />
-        <div className="lyra-orb-2 pointer-events-none absolute top-48 left-[-6rem] h-64 w-64 rounded-full bg-[var(--accent)]/10 blur-3xl" />
+        <div className="qubrix-grid pointer-events-none absolute inset-0" />
+        <div className="qubrix-orb pointer-events-none absolute -top-28 right-[-5rem] h-72 w-72 rounded-full bg-[var(--accent)]/16 blur-3xl" />
+        <div className="qubrix-orb-2 pointer-events-none absolute top-48 left-[-6rem] h-64 w-64 rounded-full bg-[var(--accent)]/10 blur-3xl" />
         <p
           aria-hidden
           className="pointer-events-none absolute -right-4 top-24 select-none text-[7.5rem] font-semibold leading-none tracking-tighter text-[var(--text)]/[0.035] sm:text-[10rem] md:right-8 md:top-16 md:text-[12rem]"
@@ -223,10 +256,10 @@ export default function LandingPage() {
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:px-5 md:grid-cols-[1.05fr_0.95fr] md:gap-14 md:py-24">
           <div>
-            <p className="lyra-rise text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">
+            <p className="qubrix-rise text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)] sm:tracking-[0.22em]">
               {brand.short} · GATE CS
             </p>
-            <h1 className="lyra-rise lyra-rise-1 mt-4 max-w-xl text-[2.35rem] font-semibold leading-[1.08] tracking-tight sm:text-5xl md:text-[3.15rem]">
+            <h1 className="qubrix-rise qubrix-rise-1 mt-4 max-w-xl text-[2.35rem] font-semibold leading-[1.08] tracking-tight sm:text-5xl md:text-[3.15rem]">
               Practice smarter.
               <br />
               Write clearer{" "}
@@ -235,11 +268,11 @@ export default function LandingPage() {
               </span>{" "}
               answers.
             </h1>
-            <p className="lyra-rise lyra-rise-2 mt-5 max-w-md text-[15px] leading-relaxed text-[var(--text-muted)]">
+            <p className="qubrix-rise qubrix-rise-2 mt-5 max-w-md text-[15px] leading-relaxed text-[var(--text-muted)]">
               Type or photograph a GATE CS solution. {brand.short} scores the approach, flags missing cases, and shows
               what a high-scoring answer usually includes — in minutes, not days.
             </p>
-            <div className="lyra-rise lyra-rise-3 mt-8 flex w-full flex-nowrap items-stretch gap-2">
+            <div className="qubrix-rise qubrix-rise-3 mt-8 flex w-full flex-nowrap items-stretch gap-2">
               <button
                 type="button"
                 disabled={loading}
@@ -256,7 +289,7 @@ export default function LandingPage() {
                 <span className="hidden sm:inline">See a sample report</span>
               </a>
             </div>
-            <div className="lyra-rise lyra-rise-4 mt-12 grid w-full grid-cols-3 gap-2 border-t border-[var(--line)] pt-6 text-sm sm:flex sm:gap-x-8 sm:gap-y-4">
+            <div className="qubrix-rise qubrix-rise-4 mt-12 grid w-full grid-cols-3 gap-2 border-t border-[var(--line)] pt-6 text-sm sm:flex sm:gap-x-8 sm:gap-y-4">
               {[
                 ["< 3 min", "per evaluation"],
                 ["6 criteria", "GATE-style rubric"],
@@ -270,16 +303,16 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="lyra-rise lyra-rise-3 relative mx-auto w-full max-w-md md:mx-0 md:max-w-none">
+          <div className="qubrix-rise qubrix-rise-3 relative mx-auto w-full max-w-md md:mx-0 md:max-w-none">
             <div className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-[var(--accent)]/8 blur-3xl" />
             {/* Orbit rings */}
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2">
-              <div className="lyra-orbit absolute inset-0 rounded-full border border-dashed border-[var(--line)] opacity-70" />
-              <div className="lyra-orbit-rev absolute inset-[8%] rounded-full border border-[var(--line)]/60 opacity-50" />
+              <div className="qubrix-orbit absolute inset-0 rounded-full border border-dashed border-[var(--line)] opacity-70" />
+              <div className="qubrix-orbit-rev absolute inset-[8%] rounded-full border border-[var(--line)]/60 opacity-50" />
               <span className="absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-[var(--accent)] shadow-[0_0_12px_var(--ring)]" />
               <span className="absolute bottom-[22%] right-[10%] h-1.5 w-1.5 rounded-full bg-[var(--accent)]/70" />
             </div>
-            <div className="lyra-grid-fine pointer-events-none absolute -inset-4 rounded-3xl opacity-80" />
+            <div className="qubrix-grid-fine pointer-events-none absolute -inset-4 rounded-3xl opacity-80" />
             <div className="relative">
               <HeroDemo />
             </div>
@@ -291,7 +324,7 @@ export default function LandingPage() {
       <div className="relative overflow-hidden border-y border-[var(--line)] py-3.5">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[var(--bg)] to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[var(--bg)] to-transparent" />
-        <div className="lyra-marquee flex w-max gap-2">
+        <div className="qubrix-marquee flex w-max gap-2">
           {[...SUBJECTS, ...SUBJECTS].map((name, i) => (
             <span
               key={`${name}-${i}`}
@@ -318,7 +351,7 @@ export default function LandingPage() {
 
         <div className="mt-10 grid gap-4 md:grid-cols-12">
           <div className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow)] md:col-span-7 md:p-6">
-            <div className="lyra-grid pointer-events-none absolute inset-0 opacity-40" />
+            <div className="qubrix-grid pointer-events-none absolute inset-0 opacity-40" />
             <div className="relative">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -338,7 +371,7 @@ export default function LandingPage() {
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                       <div
-                        className="lyra-bar h-full rounded-full bg-[var(--accent)]"
+                        className="qubrix-bar h-full rounded-full bg-[var(--accent)]"
                         style={{ width: `${score}%` }}
                       />
                     </div>
@@ -382,7 +415,7 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section id="how" className="relative border-t border-[var(--line)]">
-        <div className="lyra-grid pointer-events-none absolute inset-0 opacity-50" />
+        <div className="qubrix-grid pointer-events-none absolute inset-0 opacity-50" />
         <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-5 md:grid-cols-[0.9fr_1.1fr] md:py-24">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">How it works</p>
@@ -450,14 +483,14 @@ export default function LandingPage() {
                 </tr>
               </thead>
               <tbody>
-                {COMPARE.map(([label, lyra, other]) => (
+                {COMPARE.map(([label, qubrix, other]) => (
                   <tr key={String(label)} className="border-t border-[var(--line)]">
                     <td className="px-4 py-3.5">{label as string}</td>
                     <td className="px-4 py-3.5">
-                      {lyra === true ? (
+                      {qubrix === true ? (
                         <Check size={16} className="text-[var(--accent)]" />
                       ) : (
-                        <span className="font-medium">{lyra as string}</span>
+                        <span className="font-medium">{qubrix as string}</span>
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-[var(--text-muted)]">
@@ -476,7 +509,7 @@ export default function LandingPage() {
 
       {/* Pricing */}
       <section id="pricing" className="relative border-t border-[var(--line)]">
-        <div className="lyra-grid pointer-events-none absolute inset-0 opacity-40" />
+        <div className="qubrix-grid pointer-events-none absolute inset-0 opacity-40" />
         <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-5 md:py-24">
           <div className="max-w-xl">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">Pricing</p>
@@ -485,41 +518,72 @@ export default function LandingPage() {
               Buy credits once. Spend them on evaluations, flashcard generation, or both. Reviewing cards is free.
             </p>
           </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.name}
-                className={cn(
-                  "rounded-2xl border p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow)]",
-                  plan.highlight
-                    ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[0_16px_40px_var(--ring)]"
-                    : "border-[var(--line)] bg-[var(--bg-elevated)]",
-                )}
-              >
-                {plan.badge && (
-                  <p className="mb-3 text-center text-[11px] font-medium text-[var(--accent)]">{plan.badge}</p>
-                )}
-                <p className="text-center text-sm text-[var(--text-muted)]">{plan.name}</p>
-                <p className="mt-2 text-center text-3xl font-semibold tracking-tight">₹{plan.price}</p>
-                <p className="mt-1 text-center text-xs text-[var(--text-muted)]">{plan.credits} credits</p>
-                <p className="mt-6 text-center text-sm">
-                  ≈ {plan.evals} GATE evaluations
-                  <span className="mt-1 block text-[var(--text-muted)]">or ≈ {plan.decks} flashcard decks</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={goApp}
+          <div className="mt-10 grid items-stretch gap-4 md:grid-cols-3">
+            {PLANS.map((plan) => {
+              const Icon = plan.icon;
+              const warm = plan.tone === "warm";
+              const accent = plan.tone === "accent";
+              return (
+                <div
+                  key={plan.name}
                   className={cn(
-                    "mt-6 w-full rounded-md py-2.5 text-sm font-medium transition",
-                    plan.highlight
-                      ? "bg-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent-hover)]"
-                      : "border border-[var(--line)] bg-[var(--bg-elevated)] hover:border-[var(--accent)] hover:bg-[var(--bg-muted)]",
+                    "flex h-full flex-col rounded-2xl border p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow)]",
+                    accent && "border-[var(--accent)]/50 bg-[var(--accent-soft)] shadow-[0_16px_40px_var(--ring)]",
+                    warm && "border-[var(--flash)]/35 bg-[var(--flash-soft)]",
+                    !accent && !warm && "border-[var(--line)] bg-[var(--bg-elevated)]",
                   )}
                 >
-                  {user ? "Open wallet" : "Get started"}
-                </button>
-              </div>
-            ))}
+                  <div className="flex items-center justify-between gap-3">
+                    <span
+                      className={cn(
+                        "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                        accent && "bg-[var(--accent)] text-[var(--accent-text)]",
+                        warm && "bg-[var(--flash)] text-white",
+                        !accent && !warm && "bg-[var(--bg-muted)] text-[var(--accent)]",
+                      )}
+                    >
+                      <Icon size={18} strokeWidth={1.75} />
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-1 text-[11px] font-medium",
+                        accent && "bg-[var(--bg-elevated)] text-[var(--accent)]",
+                        warm && "bg-[var(--bg-elevated)] text-[var(--flash)]",
+                        !accent && !warm && "bg-[var(--bg-muted)] text-[var(--text-muted)]",
+                      )}
+                    >
+                      {plan.badge}
+                    </span>
+                  </div>
+                  <p className="mt-4 text-sm font-medium">{plan.name}</p>
+                  <p className="mt-1 min-h-10 text-sm leading-snug text-[var(--text-muted)]">{plan.hint}</p>
+                  <p className="mt-4 text-3xl font-semibold tracking-tight">₹{plan.price}</p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{plan.credits} credits</p>
+                  <div className="mt-5 space-y-2 border-t border-[var(--line)]/80 pt-4 text-sm">
+                    <p className="flex items-center gap-2">
+                      <PenLine size={14} className="shrink-0 text-[var(--text-muted)]" />
+                      <span>≈ {plan.evals} GATE evaluations</span>
+                    </p>
+                    <p className="flex items-center gap-2 text-[var(--text-muted)]">
+                      <Layers size={14} className="shrink-0" />
+                      <span>or ≈ {plan.decks} flashcard decks</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={goApp}
+                    className={cn(
+                      "mt-6 w-full rounded-md py-2.5 text-sm font-medium transition",
+                      accent && "bg-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent-hover)]",
+                      warm && "bg-[var(--flash)] text-[#1a140c] hover:bg-[var(--flash-hover)]",
+                      !accent && !warm && "border border-[var(--line)] bg-[var(--bg-elevated)] hover:border-[var(--accent)] hover:bg-[var(--bg-muted)]",
+                    )}
+                  >
+                    {user ? "Open wallet" : "Get started"}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -527,9 +591,9 @@ export default function LandingPage() {
       {/* Final CTA */}
       <section className="px-4 pb-10 sm:px-5">
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-[var(--line)] px-6 py-14 text-center sm:px-10">
-          <div className="lyra-grid pointer-events-none absolute inset-0" />
+          <div className="qubrix-grid pointer-events-none absolute inset-0" />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,var(--bg-elevated)_0%,var(--accent-soft)_55%,var(--bg-elevated)_100%)] opacity-90" />
-          <div className="lyra-orb pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[var(--accent)]/20 blur-3xl" />
+          <div className="qubrix-orb pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[var(--accent)]/20 blur-3xl" />
           <div className="relative">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">{brand.short}</p>
             <p className="mx-auto mt-3 max-w-lg text-xl font-semibold tracking-tight md:text-2xl">
@@ -584,14 +648,29 @@ export default function LandingPage() {
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Legal</p>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
-              Not affiliated with IITs, IISc, or GATE. Feedback is formative practice only.
-            </p>
+            <div className="mt-3 flex flex-col gap-1 text-sm">
+              <Link href="/terms" className="rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-[var(--bg-muted)]">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-[var(--bg-muted)]">
+                Privacy Policy
+              </Link>
+              <Link href="/contact" className="rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-[var(--bg-muted)]">
+                Contact
+              </Link>
+            </div>
           </div>
         </div>
-        <p className="border-t border-[var(--line)] px-5 py-4 text-center text-xs text-[var(--text-muted)]">
-          © {new Date().getFullYear()} {brand.name}
-        </p>
+        <div className="border-t border-[var(--line)]">
+          <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <p>© {new Date().getFullYear()} {brand.name}. Not affiliated with IITs, IISc, or GATE.</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <Link href="/terms" className="transition hover:text-[var(--text)]">Terms</Link>
+              <Link href="/privacy" className="transition hover:text-[var(--text)]">Privacy</Link>
+              <Link href="/contact" className="transition hover:text-[var(--text)]">Contact</Link>
+            </div>
+          </div>
+        </div>
       </footer>
 
       <ScrollToTop />

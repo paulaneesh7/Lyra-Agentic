@@ -1,17 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ClipboardList, Layers, MessageCircle, Wallet } from "lucide-react";
+import { ArrowRight, ClipboardList, Flame, Layers, MessageCircle, PenLine, Target, Wallet } from "lucide-react";
 import { useMemo } from "react";
 import { CreditTransactionLedger } from "@/components/credits/transaction-ledger";
 import { ScreenLoader } from "@/components/ui/loader";
 import { prefetchCreditsData, useCreditsData } from "@/lib/credits-data";
 import { cn } from "@/lib/utils";
 
-const PLAN_BLURBS: Record<string, string> = {
-  starter: "Try Lyra",
-  popular: "Serious preparation",
-  pro: "Heavy AI usage",
+const PLAN_COPY: Record<string, { name: string; blurb: string }> = {
+  starter: { name: "Starter", blurb: "A few scored answers to see the rubric." },
+  popular: { name: "Focus", blurb: "Enough credits for a steady weekly loop." },
+  pro: { name: "Intensive", blurb: "A full revision block before the exam." },
 };
 
 function packValue(credits: number, evalCost: number, flashCost: number) {
@@ -124,76 +124,80 @@ export default function CreditsPage() {
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => {
-            const highlight =
-              Boolean(plan.badge) &&
-              /popular|most|focus/i.test(`${plan.badge} ${plan.code} ${plan.name}`);
+            const key = `${plan.code} ${plan.name} ${plan.badge ?? ""}`.toLowerCase();
+            const tone = /popular|most|focus/.test(key) ? "accent" : /pro|intensive|best/.test(key) ? "warm" : "muted";
+            const accent = tone === "accent";
+            const warm = tone === "warm";
+            const Icon = accent ? Target : warm ? Flame : PenLine;
             const value = packValue(plan.credits, evalCost, flashCost);
-            const blurb = PLAN_BLURBS[plan.code] ?? "Prepaid credits";
+            const copy = PLAN_COPY[plan.code];
+            const blurb = copy?.blurb ?? "Prepaid credits";
+            const title = copy?.name ?? plan.name;
+            const badge = plan.badge === "Popular" ? "Most used" : plan.badge || (accent ? "Most used" : warm ? "Best value" : "First papers");
 
             return (
               <article
                 key={plan.code || plan.name}
                 className={cn(
-                  "relative flex flex-col rounded-2xl border bg-[var(--bg-elevated)] p-5 transition duration-300 sm:p-6",
-                  highlight
-                    ? "border-[var(--accent)] shadow-[0_16px_40px_var(--ring)] lg:-translate-y-1"
-                    : "border-[var(--line)] hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow)]",
+                  "flex h-full flex-col rounded-2xl border p-5 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow)] sm:p-6",
+                  accent && "border-[var(--accent)]/50 bg-[var(--accent-soft)] shadow-[0_16px_40px_var(--ring)]",
+                  warm && "border-[var(--flash)]/35 bg-[var(--flash-soft)]",
+                  !accent && !warm && "border-[var(--line)] bg-[var(--bg-elevated)]",
                 )}
               >
-                {plan.badge && (
+                <div className="flex items-center justify-between gap-3">
                   <span
                     className={cn(
-                      "absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-0.5 text-[11px] font-semibold",
-                      highlight
-                        ? "bg-[var(--accent)] text-[var(--accent-text)]"
-                        : "bg-[var(--accent-soft)] text-[var(--accent)]",
+                      "grid h-10 w-10 shrink-0 place-items-center rounded-xl",
+                      accent && "bg-[var(--accent)] text-[var(--accent-text)]",
+                      warm && "bg-[var(--flash)] text-[#1a140c]",
+                      !accent && !warm && "bg-[var(--bg-muted)] text-[var(--accent)]",
                     )}
                   >
-                    {plan.badge === "Popular" ? "Most Popular" : plan.badge}
+                    <Icon size={18} strokeWidth={1.75} />
                   </span>
-                )}
-
-                <div className={cn(plan.badge && "pt-2")}>
-                  <h3 className="text-lg font-semibold">{plan.name}</h3>
-                  <p className="mt-0.5 text-sm text-[var(--text-muted)]">{blurb}</p>
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[11px] font-medium",
+                      accent && "bg-[var(--bg-elevated)] text-[var(--accent)]",
+                      warm && "bg-[var(--bg-elevated)] text-[var(--flash)]",
+                      !accent && !warm && "bg-[var(--bg-muted)] text-[var(--text-muted)]",
+                    )}
+                  >
+                    {badge}
+                  </span>
                 </div>
 
-                <p className="mt-5">
-                  <span className="text-3xl font-semibold tracking-tight">₹{plan.price_inr}</span>
-                </p>
-                <p className="mt-1 text-sm text-[var(--text-muted)]">
-                  {plan.credits.toLocaleString()} credits
-                </p>
+                <h3 className="mt-4 text-sm font-medium">{title}</h3>
+                <p className="mt-1 min-h-10 text-sm leading-snug text-[var(--text-muted)]">{blurb}</p>
+                <p className="mt-4 text-3xl font-semibold tracking-tight">₹{plan.price_inr}</p>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">{plan.credits.toLocaleString()} credits</p>
 
-                <div
-                  className={cn(
-                    "mt-5 flex-1 rounded-xl px-3.5 py-3 text-sm leading-relaxed",
-                    highlight ? "bg-[var(--accent-soft)]" : "bg-[var(--bg-muted)]",
-                  )}
-                >
-                  Good for up to{" "}
-                  <span className="font-semibold text-[var(--flash)]">≈{value.evals}</span> GATE
-                  evaluations <span className="text-[var(--text-muted)]">OR</span>{" "}
-                  <span className="font-semibold text-[var(--flash)]">≈{value.decks}</span> flashcard
-                  decks
-                  {value.cards > 0 && (
-                    <span className="text-[var(--text-muted)]">
-                      {" "}
-                      (~{value.cards.toLocaleString()} flashcards)
+                <div className="mt-5 space-y-2 border-t border-[var(--line)]/80 pt-4 text-sm">
+                  <p className="flex items-center gap-2">
+                    <PenLine size={14} className="shrink-0 text-[var(--text-muted)]" />
+                    <span>≈ {value.evals} GATE evaluations</span>
+                  </p>
+                  <p className="flex items-start gap-2 text-[var(--text-muted)]">
+                    <Layers size={14} className="mt-0.5 shrink-0" />
+                    <span className="min-w-0">
+                      or ≈ {value.decks} flashcard decks
+                      {value.cards > 0 ? ` (~${value.cards.toLocaleString()})` : ""}
                     </span>
-                  )}
+                  </p>
                 </div>
 
+                <div className="mt-auto h-6" aria-hidden />
                 <button
                   type="button"
                   disabled
                   className={cn(
-                    "mt-5 w-full rounded-md py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-80",
-                    highlight
-                      ? "bg-[var(--accent)] text-[var(--accent-text)]"
-                      : "border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--text)]",
+                    "w-full rounded-md py-2.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-80",
+                    accent && "bg-[var(--accent)] text-[var(--accent-text)]",
+                    warm && "bg-[var(--flash)] text-[#1a140c]",
+                    !accent && !warm && "border border-[var(--line)] bg-[var(--bg-elevated)] text-[var(--text)]",
                   )}
                 >
                   Buy credits — soon

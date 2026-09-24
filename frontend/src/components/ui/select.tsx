@@ -107,7 +107,7 @@ export function Select({
             ref={menuRef}
             id={listId}
             role="listbox"
-            className="lyra-menu fixed z-[90] flex flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_24px_60px_rgba(20,16,32,0.18)]"
+            className="qubrix-menu fixed z-[90] flex flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_24px_60px_rgba(20,16,32,0.18)]"
             style={{
               top: openUp ? undefined : coords.top,
               bottom: openUp ? coords.bottom : undefined,
@@ -121,7 +121,7 @@ export function Select({
                 {menuTitle || ariaLabel || placeholder}
               </p>
             </div>
-            <ul className="lyra-menu-scroll min-h-0 flex-1 overflow-y-auto p-1.5 pb-2">
+            <ul className="qubrix-menu-scroll min-h-0 flex-1 overflow-y-auto p-1.5 pb-2">
               {options.map((option, index) => {
                 const active = option.value === value;
                 return (

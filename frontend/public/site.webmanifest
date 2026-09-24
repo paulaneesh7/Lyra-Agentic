@@ -1,6 +1,6 @@
 {
-  "name": "Lyra",
-  "short_name": "Lyra",
+  "name": "Qubrix",
+  "short_name": "Qubrix",
   "description": "AI-powered GATE prep",
   "start_url": "/",
   "display": "standalone",
