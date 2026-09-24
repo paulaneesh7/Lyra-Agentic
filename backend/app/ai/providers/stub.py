@@ -72,7 +72,7 @@ class StubAIProvider(AIProvider):
 
     def complete_text(self, *, system: str, user: str) -> str:
         return (
-            "I am Lyra's study companion in demo mode. "
+            "I am Qubrix's study companion in demo mode. "
             "Connect an OpenAI or Azure OpenAI key to enable live tutoring. "
             f"You asked: {user[:280]}"
         )

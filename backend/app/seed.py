@@ -229,15 +229,15 @@ def _seed(db: Session) -> None:
     db.add_all(
         [
             PurchasePlan(code="starter", name="Starter", price_inr=99, credits=100, badge=None),
-            PurchasePlan(code="popular", name="Popular", price_inr=499, credits=550, badge="Popular"),
-            PurchasePlan(code="pro", name="Pro", price_inr=999, credits=1150, badge="Best value"),
+            PurchasePlan(code="popular", name="Focus", price_inr=499, credits=550, badge="Most used"),
+            PurchasePlan(code="pro", name="Intensive", price_inr=999, credits=1200, badge="Best value"),
         ]
     )
 
     admin = User(
-        email="admin@lyra.ai",
+        email="admin@qubrix.ai",
         hashed_password=None,
-        full_name="Lyra Admin",
+        full_name="Qubrix Admin",
         role=UserRole.ADMIN,
         onboarding_completed=True,
     )

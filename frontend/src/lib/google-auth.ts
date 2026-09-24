@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 export const GOOGLE_SIGNIN_TOAST_ID = "google-signin";
-const PENDING_KEY = "lyra.google-auth-pending";
+const PENDING_KEY = "qubrix.google-auth-pending";
 
 export function markGoogleAuthPending() {
   try {

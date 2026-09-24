@@ -299,14 +299,14 @@ export function DeckBoard({
                     <Pencil size={13} />
                   </button>
                 </div>
-                <button type="button" className="lyra-flip" onClick={() => toggleFlip(item.id)}>
-                  <div className={cn("lyra-flip-inner", open && "is-flipped")}>
-                    <div className={cn("lyra-face flex flex-col rounded-md p-4 text-left shadow-sm", tone)}>
+                <button type="button" className="qubrix-flip" onClick={() => toggleFlip(item.id)}>
+                  <div className={cn("qubrix-flip-inner", open && "is-flipped")}>
+                    <div className={cn("qubrix-face flex flex-col rounded-md p-4 text-left shadow-sm", tone)}>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60">Q{index + 1}</p>
                       <p className="mt-3 flex-1 text-[15px] font-medium leading-snug">{item.front}</p>
                       <p className="mt-4 text-[11px] opacity-55">tap to flip</p>
                     </div>
-                    <div className={cn("lyra-face lyra-face-back flex flex-col rounded-md p-4 text-left shadow-sm", tone)}>
+                    <div className={cn("qubrix-face qubrix-face-back flex flex-col rounded-md p-4 text-left shadow-sm", tone)}>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] opacity-60">A{index + 1}</p>
                       <p className="mt-3 flex-1 overflow-y-auto text-[14px] font-medium leading-snug">{item.back}</p>
                       <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>

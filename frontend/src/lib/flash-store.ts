@@ -2,7 +2,7 @@ import { onAuthSession } from "@/lib/auth-session";
 import { api, getToken } from "@/lib/api";
 import type { FlashCard, FlashDeck } from "@/lib/flashcards";
 
-const CACHE_PREFIX = "lyra.flash.decks.v1";
+const CACHE_PREFIX = "qubrix.flash.decks.v1";
 
 let decks: FlashDeck[] = [];
 let hydrated = false;

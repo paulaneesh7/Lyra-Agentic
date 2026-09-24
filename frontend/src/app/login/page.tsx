@@ -35,9 +35,9 @@ function LoginInner() {
     }
 
     try {
-      const raw = sessionStorage.getItem("lyra.flash");
+      const raw = sessionStorage.getItem("qubrix.flash");
       if (!raw) return;
-      sessionStorage.removeItem("lyra.flash");
+      sessionStorage.removeItem("qubrix.flash");
       const flash = JSON.parse(raw) as { type?: string; message?: string };
       if (flash.type === "session-expired") {
         toast.error(flash.message || "Session expired. Please sign in again.", {

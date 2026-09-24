@@ -2,8 +2,8 @@ import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
-/** Lyra mark — constellation lyre with Vega at the crown. */
-export function LyraMark({ className }: { className?: string }) {
+/** Qubrix mark — constellation lyre with Vega at the crown. */
+export function QubrixMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
@@ -71,10 +71,10 @@ export function Logo({
         className,
       )}
     >
-      <LyraMark />
+      <QubrixMark />
       {!compact && (
         <span className="min-w-0 leading-tight">
-          <span className="block text-[13px] font-semibold tracking-tight text-[var(--text)]">
+          <span className="block truncate text-[13px] font-semibold tracking-tight text-[var(--text)]">
             {brand.short}
           </span>
           <span

@@ -38,17 +38,17 @@ export function ScoringStage({ active, subject }: { active: boolean; subject?: s
       <div className="relative flex w-full max-w-md flex-col items-center px-6">
         <div className="relative h-56 w-56">
           <div className="absolute inset-6 rounded-full border border-[var(--line)]" />
-          <div className="lyra-orbit absolute inset-0">
+          <div className="qubrix-orbit absolute inset-0">
             <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full bg-[var(--accent)] shadow-[0_0_16px_var(--accent)]" />
           </div>
-          <div className="lyra-orbit-rev absolute inset-4">
+          <div className="qubrix-orbit-rev absolute inset-4">
             <div className="absolute bottom-0 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[var(--accent)]/70" />
           </div>
           <div className="absolute inset-10 overflow-hidden rounded-full border border-[var(--accent)]/30 bg-[var(--bg-elevated)]">
-            <div className="lyra-scan absolute inset-x-0 h-10 bg-gradient-to-b from-transparent via-[var(--accent)]/20 to-transparent" />
+            <div className="qubrix-scan absolute inset-x-0 h-10 bg-gradient-to-b from-transparent via-[var(--accent)]/20 to-transparent" />
             <div className="grid h-full place-items-center text-center">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Lyra</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Qubrix</p>
                 <p className="mt-1 text-sm font-medium">Formative score</p>
               </div>
             </div>

@@ -39,7 +39,7 @@ function CallbackInner() {
     }
 
     setSession(token);
-    sessionStorage.setItem("lyra.flash", "signed-in");
+    sessionStorage.setItem("qubrix.flash", "signed-in");
     window.location.replace("/dashboard");
   }, [params, router]);
 
