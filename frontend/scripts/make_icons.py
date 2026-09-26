@@ -1,50 +1,84 @@
+"""Build favicon PNGs and the tab icon from public/favicon.svg.
+
+The SVG is the header mark (no wordmark). Next.js serves src/app/favicon.ico
+ahead of public/favicon.ico, so both copies are written.
+"""
+
+from __future__ import annotations
+
+import subprocess
+import tempfile
 from pathlib import Path
-from PIL import Image, ImageDraw
 
-out = Path(__file__).resolve().parents[1] / "public"
+from PIL import Image
 
-
-def rounded_rect(size: int, radius: int, color: tuple[int, int, int, int]):
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, size - 1, size - 1), radius=radius, fill=color)
-    return img, d
+ROOT = Path(__file__).resolve().parents[1]
+SVG = ROOT / "public" / "favicon.svg"
+PUBLIC = ROOT / "public"
+APP_ICO = ROOT / "src" / "app" / "favicon.ico"
+CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 
-def draw_mark(d: ImageDraw.ImageDraw, size: int) -> None:
-    s = size / 32
-    width = max(2, int(2.2 * s))
-    d.line(
-        [(9 * s, 25 * s), (9 * s, 7 * s), (22 * s, 16.2 * s), (22 * s, 25 * s)],
-        fill=(255, 255, 255, 255),
-        width=width,
-        joint="curve",
-    )
-    r = max(1.5, 2.1 * s)
-    cx, cy = 22 * s, 10 * s
-    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(255, 255, 255, 255))
-
-
-def make(size: int, radius: int) -> Image.Image:
-    img, d = rounded_rect(size, radius, (107, 78, 163, 255))
-    draw_mark(d, size)
-    return img
+def rasterize(size: int) -> Image.Image:
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body {{ margin: 0; padding: 0; background: transparent; width: {size}px; height: {size}px; overflow: hidden; }}
+  img {{ width: {size}px; height: {size}px; display: block; }}
+</style>
+</head>
+<body><img src="{SVG.as_uri()}" width="{size}" height="{size}"></body>
+</html>
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        page = Path(tmp) / "icon.html"
+        shot = Path(tmp) / "icon.png"
+        page.write_text(html)
+        subprocess.run(
+            [
+                CHROME,
+                "--headless",
+                "--disable-gpu",
+                "--hide-scrollbars",
+                "--force-device-scale-factor=1",
+                f"--default-background-color=00000000",
+                f"--window-size={size},{size}",
+                f"--screenshot={shot}",
+                page.as_uri(),
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        image = Image.open(shot).convert("RGBA")
+    if image.size != (size, size):
+        image = image.resize((size, size), Image.Resampling.LANCZOS)
+    return image
 
 
 def main() -> None:
-    make(192, 44).save(out / "icon-192.png")
-    make(512, 112).save(out / "icon-512.png")
-    make(180, 40).save(out / "apple-touch-icon.png")
-    make(32, 8).save(out / "favicon-32.png")
-    # Next.js serves src/app/favicon.ico ahead of public/favicon.ico.
-    # Start from 256 so the tab icon stays sharp when the browser scales it.
-    mark = make(256, 64)
-    ico_path = out / "favicon.ico"
-    mark.save(ico_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
-    app_ico = out.parent / "src" / "app" / "favicon.ico"
-    app_ico.write_bytes(ico_path.read_bytes())
-    print("wrote icons into", out)
-    print("wrote", app_ico)
+    if not SVG.is_file():
+        raise SystemExit(f"missing {SVG}")
+    if not Path(CHROME).is_file():
+        raise SystemExit("Google Chrome is required to rasterize favicon.svg")
+
+    master = rasterize(512)
+    master.save(PUBLIC / "icon-512.png")
+    master.resize((192, 192), Image.Resampling.LANCZOS).save(PUBLIC / "icon-192.png")
+    master.resize((32, 32), Image.Resampling.LANCZOS).save(PUBLIC / "favicon-32.png")
+
+    # iOS paints transparent corners black, so sit the mark on the brand purple.
+    apple = Image.new("RGBA", (180, 180), (107, 78, 163, 255))
+    apple.alpha_composite(master.resize((180, 180), Image.Resampling.LANCZOS))
+    apple.save(PUBLIC / "apple-touch-icon.png")
+
+    ico = master.resize((256, 256), Image.Resampling.LANCZOS)
+    ico_path = PUBLIC / "favicon.ico"
+    ico.save(ico_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
+    APP_ICO.write_bytes(ico_path.read_bytes())
+    print("wrote icons from", SVG)
 
 
 if __name__ == "__main__":
