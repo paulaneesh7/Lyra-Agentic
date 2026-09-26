@@ -36,8 +36,15 @@ def main() -> None:
     make(512, 112).save(out / "icon-512.png")
     make(180, 40).save(out / "apple-touch-icon.png")
     make(32, 8).save(out / "favicon-32.png")
-    make(32, 8).save(out / "favicon.ico", format="ICO", sizes=[(16, 16), (32, 32)])
+    # Next.js serves src/app/favicon.ico ahead of public/favicon.ico.
+    # Start from 256 so the tab icon stays sharp when the browser scales it.
+    mark = make(256, 64)
+    ico_path = out / "favicon.ico"
+    mark.save(ico_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
+    app_ico = out.parent / "src" / "app" / "favicon.ico"
+    app_ico.write_bytes(ico_path.read_bytes())
     print("wrote icons into", out)
+    print("wrote", app_ico)
 
 
 if __name__ == "__main__":
