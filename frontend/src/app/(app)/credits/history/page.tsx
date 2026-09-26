@@ -16,7 +16,7 @@ export default function CreditHistoryPage() {
   const flashCost = data.costs?.flashcard_generation ?? 5;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-7 pb-10 sm:space-y-9">
+    <div className="mx-auto w-full min-w-0 max-w-5xl space-y-7 pb-10 sm:space-y-9">
       <header className="space-y-4">
         <Link
           href="/credits"

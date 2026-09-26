@@ -40,7 +40,7 @@ export default function CreditsPage() {
   const hasMore = data.transactions.length > 5;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 pb-10 sm:space-y-10">
+    <div className="mx-auto w-full min-w-0 max-w-5xl space-y-8 pb-10 sm:space-y-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Credits</h1>
